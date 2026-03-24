@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Predictor de Partidos</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #0f0f1a;
+      color: #e0e0f0;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 40px 20px;
+    }
+
+    h1 {
+      font-size: 2rem;
+      margin-bottom: 8px;
+      background: linear-gradient(90deg, #7f5af0, #2cb67d);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .subtitle {
+      color: #888;
+      margin-bottom: 40px;
+      font-size: 0.9rem;
+    }
+
+    .card {
+      background: #1a1a2e;
+      border: 1px solid #2a2a4a;
+      border-radius: 16px;
+      padding: 32px;
+      width: 100%;
+      max-width: 560px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    label {
+      font-size: 0.8rem;
+      color: #888;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 6px;
+      display: block;
+    }
+
+    select {
+      width: 100%;
+      padding: 12px 16px;
+      background: #0f0f1a;
+      border: 1px solid #3a3a5c;
+      border-radius: 10px;
+      color: #e0e0f0;
+      font-size: 1rem;
+      appearance: none;
+      cursor: pointer;
+      transition: border-color 0.2s;
+    }
+
+    select:focus {
+      outline: none;
+      border-color: #7f5af0;
+    }
+
+    select:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
+    .select-wrapper {
+      position: relative;
+    }
+
+    .select-wrapper::after {
+      content: '▾';
+      position: absolute;
+      right: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #7f5af0;
+      pointer-events: none;
+    }
+
+    .teams-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    button {
+      padding: 14px;
+      background: linear-gradient(135deg, #7f5af0, #2cb67d);
+      border: none;
+      border-radius: 10px;
+      color: white;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity 0.2s, transform 0.1s;
+    }
+
+    button:hover:not(:disabled) { opacity: 0.9; transform: translateY(-1px); }
+    button:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    #result {
+      display: none;
+      background: #0f0f1a;
+      border: 1px solid #3a3a5c;
+      border-radius: 12px;
+      padding: 24px;
+      text-align: center;
+    }
+
+    #result .winner {
+      font-size: 1.6rem;
+      font-weight: 700;
+      color: #2cb67d;
+      margin-bottom: 8px;
+    }
+
+    #result .prob-row {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 16px;
+      gap: 12px;
+    }
+
+    .prob-box {
+      flex: 1;
+      background: #1a1a2e;
+      border-radius: 10px;
+      padding: 14px;
+      border: 1px solid #2a2a4a;
+    }
+
+    .prob-box.highlight { border-color: #2cb67d; }
+
+    .prob-box .team-name {
+      font-size: 0.85rem;
+      color: #aaa;
+      margin-bottom: 4px;
+    }
+
+    .prob-box .pct {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #e0e0f0;
+    }
+
+    .prob-box.highlight .pct { color: #2cb67d; }
+
+    .bar-wrap {
+      background: #2a2a4a;
+      border-radius: 999px;
+      height: 8px;
+      margin-top: 16px;
+      overflow: hidden;
+    }
+
+    .bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #7f5af0, #2cb67d);
+      border-radius: 999px;
+      transition: width 0.6s ease;
+    }
+
+    #error {
+      color: #ff6b6b;
+      font-size: 0.85rem;
+      text-align: center;
+      display: none;
+    }
+
+    .loader {
+      border: 3px solid #2a2a4a;
+      border-top-color: #7f5af0;
+      border-radius: 50%;
+      width: 28px;
+      height: 28px;
+      animation: spin 0.7s linear infinite;
+      margin: 0 auto;
+      display: none;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .quota {
+      font-size: 0.75rem;
+      color: #555;
+      text-align: right;
+    }
+  </style>
+</head>
+<body>
+
+<h1>⚽🏀⚾ Predictor de Partidos</h1>
+<p class="subtitle">Basado en odds reales de múltiples casas de apuestas</p>
+
+<div class="card">
+
+  <div>
+    <label>1. Selecciona el deporte</label>
+    <div class="select-wrapper">
+      <select id="sportSelect">
+        <option value="">— Elige un deporte —</option>
+        <option value="soccer">⚽ Fútbol</option>
+        <option value="basketball">🏀 Basketball</option>
+        <option value="baseball">⚾ Béisbol</option>
+      </select>
+    </div>
+  </div>
+
+  <div>
+    <label>2. Selecciona la liga</label>
+    <div class="select-wrapper">
+      <select id="leagueSelect" disabled>
+        <option value="">— Primero elige un deporte —</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="teams-row">
+    <div>
+      <label>3. Equipo A</label>
+      <div class="select-wrapper">
+        <select id="teamA" disabled>
+          <option value="">— Elige liga primero —</option>
+        </select>
+      </div>
+    </div>
+    <div>
+      <label>4. Equipo B</label>
+      <div class="select-wrapper">
+        <select id="teamB" disabled>
+          <option value="">— Elige liga
