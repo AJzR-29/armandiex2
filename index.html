@@ -6,7 +6,6 @@
   <title>Predictor de Partidos</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
-
     body {
       font-family: 'Segoe UI', sans-serif;
       background: #0f0f1a;
@@ -17,7 +16,6 @@
       align-items: center;
       padding: 40px 20px;
     }
-
     h1 {
       font-size: 2rem;
       margin-bottom: 8px;
@@ -25,13 +23,7 @@
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
     }
-
-    .subtitle {
-      color: #888;
-      margin-bottom: 40px;
-      font-size: 0.9rem;
-    }
-
+    .subtitle { color: #888; margin-bottom: 40px; font-size: 0.9rem; }
     .card {
       background: #1a1a2e;
       border: 1px solid #2a2a4a;
@@ -43,7 +35,6 @@
       flex-direction: column;
       gap: 20px;
     }
-
     label {
       font-size: 0.8rem;
       color: #888;
@@ -52,7 +43,6 @@
       margin-bottom: 6px;
       display: block;
     }
-
     select {
       width: 100%;
       padding: 12px 16px;
@@ -65,21 +55,9 @@
       cursor: pointer;
       transition: border-color 0.2s;
     }
-
-    select:focus {
-      outline: none;
-      border-color: #7f5af0;
-    }
-
-    select:disabled {
-      opacity: 0.4;
-      cursor: not-allowed;
-    }
-
-    .select-wrapper {
-      position: relative;
-    }
-
+    select:focus { outline: none; border-color: #7f5af0; }
+    select:disabled { opacity: 0.4; cursor: not-allowed; }
+    .select-wrapper { position: relative; }
     .select-wrapper::after {
       content: '▾';
       position: absolute;
@@ -89,13 +67,7 @@
       color: #7f5af0;
       pointer-events: none;
     }
-
-    .teams-row {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 16px;
-    }
-
+    .teams-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
     button {
       padding: 14px;
       background: linear-gradient(135deg, #7f5af0, #2cb67d);
@@ -107,10 +79,8 @@
       cursor: pointer;
       transition: opacity 0.2s, transform 0.1s;
     }
-
     button:hover:not(:disabled) { opacity: 0.9; transform: translateY(-1px); }
     button:disabled { opacity: 0.4; cursor: not-allowed; }
-
     #result {
       display: none;
       background: #0f0f1a;
@@ -119,21 +89,8 @@
       padding: 24px;
       text-align: center;
     }
-
-    #result .winner {
-      font-size: 1.6rem;
-      font-weight: 700;
-      color: #2cb67d;
-      margin-bottom: 8px;
-    }
-
-    #result .prob-row {
-      display: flex;
-      justify-content: space-between;
-      margin-top: 16px;
-      gap: 12px;
-    }
-
+    #result .winner { font-size: 1.6rem; font-weight: 700; color: #2cb67d; margin-bottom: 8px; }
+    #result .prob-row { display: flex; justify-content: space-between; margin-top: 16px; gap: 12px; }
     .prob-box {
       flex: 1;
       background: #1a1a2e;
@@ -141,63 +98,29 @@
       padding: 14px;
       border: 1px solid #2a2a4a;
     }
-
     .prob-box.highlight { border-color: #2cb67d; }
-
-    .prob-box .team-name {
-      font-size: 0.85rem;
-      color: #aaa;
-      margin-bottom: 4px;
-    }
-
-    .prob-box .pct {
-      font-size: 1.5rem;
-      font-weight: 700;
-      color: #e0e0f0;
-    }
-
+    .prob-box .team-name { font-size: 0.85rem; color: #aaa; margin-bottom: 4px; }
+    .prob-box .pct { font-size: 1.5rem; font-weight: 700; color: #e0e0f0; }
     .prob-box.highlight .pct { color: #2cb67d; }
-
-    .bar-wrap {
-      background: #2a2a4a;
-      border-radius: 999px;
-      height: 8px;
-      margin-top: 16px;
-      overflow: hidden;
-    }
-
+    .bar-wrap { background: #2a2a4a; border-radius: 999px; height: 8px; margin-top: 16px; overflow: hidden; }
     .bar-fill {
       height: 100%;
       background: linear-gradient(90deg, #7f5af0, #2cb67d);
       border-radius: 999px;
       transition: width 0.6s ease;
     }
-
-    #error {
-      color: #ff6b6b;
-      font-size: 0.85rem;
-      text-align: center;
-      display: none;
-    }
-
+    #error { color: #ff6b6b; font-size: 0.85rem; text-align: center; display: none; }
     .loader {
       border: 3px solid #2a2a4a;
       border-top-color: #7f5af0;
       border-radius: 50%;
-      width: 28px;
-      height: 28px;
+      width: 28px; height: 28px;
       animation: spin 0.7s linear infinite;
       margin: 0 auto;
       display: none;
     }
-
     @keyframes spin { to { transform: rotate(360deg); } }
-
-    .quota {
-      font-size: 0.75rem;
-      color: #555;
-      text-align: right;
-    }
+    .quota { font-size: 0.75rem; color: #555; text-align: right; }
   </style>
 </head>
 <body>
@@ -241,4 +164,346 @@
       <label>4. Equipo B</label>
       <div class="select-wrapper">
         <select id="teamB" disabled>
-          <option value="">— Elige liga
+          <option value="">— Elige liga primero —</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <div id="error">⚠️ <span id="errorMsg"></span></div>
+  <div class="loader" id="loader"></div>
+
+  <button id="predictBtn" disabled>Predecir ganador</button>
+
+  <div id="result">
+    <div style="color:#888; font-size:0.8rem; margin-bottom:6px;">GANADOR MÁS PROBABLE</div>
+    <div class="winner" id="winnerName"></div>
+    <div style="color:#666; font-size:0.8rem" id="bookmakerCount"></div>
+    <div class="prob-row">
+      <div class="prob-box" id="boxA">
+        <div class="team-name" id="nameA"></div>
+        <div class="pct" id="pctA"></div>
+      </div>
+      <div class="prob-box" id="boxB">
+        <div class="team-name" id="nameB"></div>
+        <div class="pct" id="pctB"></div>
+      </div>
+    </div>
+    <div class="bar-wrap">
+      <div class="bar-fill" id="barFill"></div>
+    </div>
+  </div>
+
+  <div class="quota" id="quotaInfo"></div>
+</div>
+
+<script>
+const API_KEY = '27efeb9368c8c4d45c578bb7d0136365';
+const BASE    = 'https://api.the-odds-api.com/v4';
+
+const NBA_TEAMS = [
+  "Atlanta Hawks","Boston Celtics","Brooklyn Nets","Charlotte Hornets",
+  "Chicago Bulls","Cleveland Cavaliers","Dallas Mavericks","Denver Nuggets",
+  "Detroit Pistons","Golden State Warriors","Houston Rockets","Indiana Pacers",
+  "Los Angeles Clippers","Los Angeles Lakers","Memphis Grizzlies","Miami Heat",
+  "Milwaukee Bucks","Minnesota Timberwolves","New Orleans Pelicans","New York Knicks",
+  "Oklahoma City Thunder","Orlando Magic","Philadelphia 76ers","Phoenix Suns",
+  "Portland Trail Blazers","Sacramento Kings","San Antonio Spurs","Toronto Raptors",
+  "Utah Jazz","Washington Wizards"
+];
+
+const MLB_TEAMS = [
+  "Arizona Diamondbacks","Atlanta Braves","Baltimore Orioles","Boston Red Sox",
+  "Chicago Cubs","Chicago White Sox","Cincinnati Reds","Cleveland Guardians",
+  "Colorado Rockies","Detroit Tigers","Houston Astros","Kansas City Royals",
+  "Los Angeles Angels","Los Angeles Dodgers","Miami Marlins","Milwaukee Brewers",
+  "Minnesota Twins","New York Mets","New York Yankees","Oakland Athletics",
+  "Philadelphia Phillies","Pittsburgh Pirates","San Diego Padres","San Francisco Giants",
+  "Seattle Mariners","St. Louis Cardinals","Tampa Bay Rays","Texas Rangers",
+  "Toronto Blue Jays","Washington Nationals"
+];
+
+const LEAGUES = {
+  soccer: [
+    { key: 'soccer_uefa_champs_league',               title: '🏆 UEFA Champions League' },
+    { key: 'soccer_uefa_champs_league_qualification', title: '🏆 UEFA Champions League (Clasificación)' },
+    { key: 'soccer_uefa_europa_league',               title: '🏆 UEFA Europa League' },
+    { key: 'soccer_uefa_europa_conference_league',    title: '🏆 UEFA Conference League' },
+    { key: 'soccer_uefa_nations_league',              title: '🏆 UEFA Nations League' },
+    { key: 'soccer_uefa_euro_qualification',          title: '🏆 UEFA Euro (Clasificación)' },
+    { key: 'soccer_epl',                              title: '🏴󠁧󠁢󠁥󠁮󠁧󠁿 Premier League' },
+    { key: 'soccer_efl_champ',                        title: '🏴󠁧󠁢󠁥󠁮󠁧󠁿 Championship' },
+    { key: 'soccer_england_league1',                  title: '🏴󠁧󠁢󠁥󠁮󠁧󠁿 League 1' },
+    { key: 'soccer_england_league2',                  title: '🏴󠁧󠁢󠁥󠁮󠁧󠁿 League 2' },
+    { key: 'soccer_fa_cup',                           title: '🏴󠁧󠁢󠁥󠁮󠁧󠁿 FA Cup' },
+    { key: 'soccer_england_efl_cup',                  title: '🏴󠁧󠁢󠁥󠁮󠁧󠁿 EFL Cup' },
+    { key: 'soccer_spain_la_liga',                    title: '🇪🇸 La Liga' },
+    { key: 'soccer_spain_segunda_division',           title: '🇪🇸 La Liga 2' },
+    { key: 'soccer_spain_copa_del_rey',               title: '🇪🇸 Copa del Rey' },
+    { key: 'soccer_germany_bundesliga',               title: '🇩🇪 Bundesliga' },
+    { key: 'soccer_germany_bundesliga2',              title: '🇩🇪 Bundesliga 2' },
+    { key: 'soccer_germany_liga3',                    title: '🇩🇪 3. Liga' },
+    { key: 'soccer_germany_dfb_pokal',                title: '🇩🇪 DFB-Pokal' },
+    { key: 'soccer_italy_serie_a',                    title: '🇮🇹 Serie A' },
+    { key: 'soccer_italy_serie_b',                    title: '🇮🇹 Serie B' },
+    { key: 'soccer_italy_coppa_italia',               title: '🇮🇹 Coppa Italia' },
+    { key: 'soccer_france_ligue_one',                 title: '🇫🇷 Ligue 1' },
+    { key: 'soccer_france_ligue_two',                 title: '🇫🇷 Ligue 2' },
+    { key: 'soccer_france_coupe_de_france',           title: '🇫🇷 Coupe de France' },
+    { key: 'soccer_portugal_primeira_liga',           title: '🇵🇹 Primeira Liga' },
+    { key: 'soccer_netherlands_eredivisie',           title: '🇳🇱 Eredivisie' },
+    { key: 'soccer_belgium_first_div',                title: '🇧🇪 First Division A' },
+    { key: 'soccer_spl',                              title: '🏴󠁧󠁢󠁳󠁣󠁴󠁿 Premiership' },
+    { key: 'soccer_turkey_super_league',              title: '🇹🇷 Süper Lig' },
+    { key: 'soccer_greece_super_league',              title: '🇬🇷 Super League' },
+    { key: 'soccer_austria_bundesliga',               title: '🇦🇹 Bundesliga Austria' },
+    { key: 'soccer_switzerland_superleague',          title: '🇨🇭 Super League Suiza' },
+    { key: 'soccer_poland_ekstraklasa',               title: '🇵🇱 Ekstraklasa' },
+    { key: 'soccer_russia_premier_league',            title: '🇷🇺 Premier League Rusia' },
+    { key: 'soccer_denmark_superliga',                title: '🇩🇰 Superliga Dinamarca' },
+    { key: 'soccer_norway_eliteserien',               title: '🇳🇴 Eliteserien' },
+    { key: 'soccer_sweden_allsvenskan',               title: '🇸🇪 Allsvenskan' },
+    { key: 'soccer_sweden_superettan',                title: '🇸🇪 Superettan' },
+    { key: 'soccer_finland_veikkausliiga',            title: '🇫🇮 Veikkausliiga' },
+    { key: 'soccer_league_of_ireland',                title: '🇮🇪 League of Ireland' },
+    { key: 'soccer_conmebol_copa_libertadores',       title: '🌎 Copa Libertadores' },
+    { key: 'soccer_conmebol_copa_sudamericana',       title: '🌎 Copa Sudamericana' },
+    { key: 'soccer_conmebol_copa_america',            title: '🌎 Copa América' },
+    { key: 'soccer_argentina_primera_division',       title: '🇦🇷 Primera División Argentina' },
+    { key: 'soccer_brazil_campeonato',                title: '🇧🇷 Brasileirão Série A' },
+    { key: 'soccer_brazil_serie_b',                   title: '🇧🇷 Brasileirão Série B' },
+    { key: 'soccer_chile_campeonato',                 title: '🇨🇱 Primera División Chile' },
+    { key: 'soccer_mexico_ligamx',                    title: '🇲🇽 Liga MX' },
+    { key: 'soccer_usa_mls',                          title: '🇺🇸 MLS' },
+    { key: 'soccer_concacaf_leagues_cup',             title: '🌎 CONCACAF Leagues Cup' },
+    { key: 'soccer_saudi_arabia_pro_league',          title: '🇸🇦 Saudi Pro League' },
+    { key: 'soccer_china_superleague',                title: '🇨🇳 Super League China' },
+    { key: 'soccer_japan_j_league',                   title: '🇯🇵 J League' },
+    { key: 'soccer_korea_kleague1',                   title: '🇰🇷 K League 1' },
+    { key: 'soccer_australia_aleague',                title: '🇦🇺 A-League' },
+    { key: 'soccer_fifa_world_cup',                   title: '🌍 FIFA World Cup' },
+    { key: 'soccer_fifa_club_world_cup',              title: '🌍 FIFA Club World Cup' },
+    { key: 'soccer_africa_cup_of_nations',            title: '🌍 Africa Cup of Nations' },
+  ],
+  basketball: [
+    { key: 'basketball_nba',                       title: '🇺🇸 NBA',                          staticTeams: NBA_TEAMS },
+    { key: 'basketball_nba_preseason',             title: '🇺🇸 NBA Preseason',                staticTeams: NBA_TEAMS },
+    { key: 'basketball_nba_all_stars',             title: '🇺🇸 NBA All Star' },
+    { key: 'basketball_nba_summer_league',         title: '🇺🇸 NBA Summer League' },
+    { key: 'basketball_nba_championship_winner',   title: '🇺🇸 NBA Championship (Futuros)' },
+    { key: 'basketball_wnba',                      title: '🇺🇸 WNBA' },
+    { key: 'basketball_ncaab',                     title: '🇺🇸 NCAA Basketball' },
+    { key: 'basketball_wncaab',                    title: '🇺🇸 NCAA Basketball (Femenino)' },
+    { key: 'basketball_ncaab_championship_winner', title: '🇺🇸 NCAA Championship (Futuros)' },
+    { key: 'basketball_euroleague',                title: '🇪🇺 EuroLeague' },
+    { key: 'basketball_nbl',                       title: '🇦🇺 NBL Australia' },
+    { key: 'basketball_cba',                       title: '🇨🇳 CBA (China)' },
+  ],
+  baseball: [
+    { key: 'baseball_mlb',                       title: '🇺🇸 MLB',            staticTeams: MLB_TEAMS },
+    { key: 'baseball_mlb_preseason',             title: '🇺🇸 MLB Preseason',  staticTeams: MLB_TEAMS },
+    { key: 'baseball_mlb_world_series_winner',   title: '🇺🇸 MLB World Series (Futuros)' },
+    { key: 'baseball_milb',                      title: '🇺🇸 Minor League (MiLB)' },
+    { key: 'baseball_ncaa',                      title: '🇺🇸 NCAA Baseball' },
+    { key: 'baseball_npb',                       title: '🇯🇵 NPB (Japón)' },
+    { key: 'baseball_kbo',                       title: '🇰🇷 KBO League (Corea)' },
+  ]
+};
+
+// ── DOM refs ──────────────────────────────────────────────
+const sportSelect  = document.getElementById('sportSelect');
+const leagueSelect = document.getElementById('leagueSelect');
+const teamA        = document.getElementById('teamA');
+const teamB        = document.getElementById('teamB');
+const predictBtn   = document.getElementById('predictBtn');
+const loader       = document.getElementById('loader');
+const errorDiv     = document.getElementById('error');
+const errorMsg     = document.getElementById('errorMsg');
+const resultDiv    = document.getElementById('result');
+const quotaInfo    = document.getElementById('quotaInfo');
+
+let eventsCache = [];
+
+function showError(msg) { errorMsg.textContent = msg; errorDiv.style.display = 'block'; }
+function hideError()    { errorDiv.style.display = 'none'; }
+function setLoading(on) { loader.style.display = on ? 'block' : 'none'; }
+
+function resetTeams() {
+  [teamA, teamB].forEach(s => {
+    s.innerHTML = '<option value="">— Cargando... —</option>';
+    s.disabled = true;
+  });
+  predictBtn.disabled = true;
+  resultDiv.style.display = 'none';
+}
+
+function populateTeams(events, staticTeams = []) {
+  const teams = new Set(staticTeams);
+  events.forEach(e => { teams.add(e.home_team); teams.add(e.away_team); });
+  const sorted = [...teams].sort();
+  [teamA, teamB].forEach(sel => {
+    sel.innerHTML = '<option value="">— Elige un equipo —</option>';
+    sorted.forEach(t => {
+      const opt = document.createElement('option');
+      opt.value = t; opt.textContent = t;
+      sel.appendChild(opt);
+    });
+    sel.disabled = false;
+  });
+}
+
+function oddsToProb(decimal) { return 1 / decimal; }
+
+function getAvgProb(events, teamName) {
+  let total = 0, count = 0;
+  events.forEach(ev => {
+    if (ev.home_team !== teamName && ev.away_team !== teamName) return;
+    ev.bookmakers.forEach(bk => {
+      const h2h = bk.markets.find(m => m.key === 'h2h');
+      if (!h2h) return;
+      const outcome = h2h.outcomes.find(o => o.name === teamName);
+      if (outcome) { total += oddsToProb(outcome.price); count++; }
+    });
+  });
+  return count > 0 ? total / count : null;
+}
+
+// ── Sport select ──────────────────────────────────────────
+sportSelect.addEventListener('change', () => {
+  const sport = sportSelect.value;
+  hideError();
+  resultDiv.style.display = 'none';
+  leagueSelect.innerHTML = '<option value="">— Elige una liga —</option>';
+  leagueSelect.disabled = !sport;
+  eventsCache = [];
+  resetTeams();
+  if (!sport) return;
+  (LEAGUES[sport] || []).forEach(l => {
+    const opt = document.createElement('option');
+    opt.value = l.key; opt.textContent = l.title;
+    leagueSelect.appendChild(opt);
+  });
+  [teamA, teamB].forEach(s => {
+    s.innerHTML = '<option value="">— Primero elige liga —</option>';
+  });
+});
+
+// ── League select — solo usa /odds, sin /participants ─────
+leagueSelect.addEventListener('change', async () => {
+  const leagueKey = leagueSelect.value;
+  hideError();
+  resultDiv.style.display = 'none';
+  if (!leagueKey) { resetTeams(); return; }
+
+  resetTeams();
+  setLoading(true);
+
+  try {
+    const sport = sportSelect.value;
+    const leagueConfig = (LEAGUES[sport] || []).find(l => l.key === leagueKey);
+    const staticTeams  = leagueConfig?.staticTeams || [];
+
+    const res = await fetch(
+      `${BASE}/sports/${leagueKey}/odds/?apiKey=${API_KEY}&regions=eu&markets=h2h&oddsFormat=decimal`
+    );
+
+    const remaining = res.headers.get('x-requests-remaining');
+    const used      = res.headers.get('x-requests-used');
+    if (remaining !== null) {
+      quotaInfo.textContent = `Créditos API usados: ${used} | Restantes: ${remaining}`;
+    }
+
+    let data = [];
+    if (res.ok) {
+      data = await res.json();
+      if (!Array.isArray(data)) data = [];
+    }
+
+    // Si no hay partidos activos pero hay lista estática (NBA, MLB), igual muestra equipos
+    if (staticTeams.length === 0 && data.length === 0) {
+      showError('No hay partidos disponibles para esta liga en este momento.');
+      // Deja los selects deshabilitados pero no bloquea la app
+      setLoading(false);
+      return;
+    }
+
+    eventsCache = data;
+    populateTeams(data, staticTeams);
+
+  } catch (e) {
+    showError('Error al conectar con la API: ' + e.message);
+  }
+
+  setLoading(false);
+});
+
+// ── Team selects ──────────────────────────────────────────
+[teamA, teamB].forEach(s => {
+  s.addEventListener('change', () => {
+    hideError();
+    const a = teamA.value, b = teamB.value;
+    predictBtn.disabled = !(a && b && a !== b);
+    if (a && b && a === b) showError('Debes elegir dos equipos distintos.');
+  });
+});
+
+// ── Predict ───────────────────────────────────────────────
+predictBtn.addEventListener('click', () => {
+  hideError();
+  resultDiv.style.display = 'none';
+
+  const tA = teamA.value;
+  const tB = teamB.value;
+
+  if (!tA || !tB || tA === tB) { showError('Selecciona dos equipos distintos.'); return; }
+
+  let relevantEvents = eventsCache.filter(e =>
+    (e.home_team === tA && e.away_team === tB) ||
+    (e.home_team === tB && e.away_team === tA)
+  );
+
+  const directMatch = relevantEvents.length > 0;
+  if (!directMatch) {
+    relevantEvents = eventsCache.filter(e =>
+      e.home_team === tA || e.away_team === tA ||
+      e.home_team === tB || e.away_team === tB
+    );
+  }
+
+  if (relevantEvents.length === 0) {
+    showError('No hay odds activas para estos equipos. Puede que no tengan partido próximo.');
+    return;
+  }
+
+  const probA_raw = getAvgProb(relevantEvents, tA);
+  const probB_raw = getAvgProb(relevantEvents, tB);
+
+  if (probA_raw === null || probB_raw === null) {
+    showError('No hay suficientes datos de odds para estos equipos.');
+    return;
+  }
+
+  const total = probA_raw + probB_raw;
+  const probA = probA_raw / total;
+  const probB = probB_raw / total;
+  const winner = probA >= probB ? tA : tB;
+
+  const bkSet = new Set();
+  relevantEvents.forEach(e => e.bookmakers.forEach(b => bkSet.add(b.key)));
+
+  document.getElementById('winnerName').textContent    = `🏆 ${winner}`;
+  document.getElementById('bookmakerCount').textContent =
+    `Basado en ${bkSet.size} casa${bkSet.size !== 1 ? 's' : ''} de apuestas · ${directMatch ? 'Partido directo' : 'Rendimiento individual'}`;
+  document.getElementById('nameA').textContent = tA;
+  document.getElementById('pctA').textContent  = Math.round(probA * 100) + '%';
+  document.getElementById('nameB').textContent = tB;
+  document.getElementById('pctB').textContent  = Math.round(probB * 100) + '%';
+  document.getElementById('boxA').className    = 'prob-box' + (probA >= probB ? ' highlight' : '');
+  document.getElementById('boxB').className    = 'prob-box' + (probB >  probA ? ' highlight' : '');
+  document.getElementById('barFill').style.width = Math.round(probA * 100) + '%';
+
+  resultDiv.style.display = 'block';
+});
+</script>
+</body>
+</html>
