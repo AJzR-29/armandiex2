@@ -67,15 +67,15 @@
       pointer-events: none;
     }
     .teams-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-    button#predictBtn {
+    #predictBtn {
       padding: 14px;
       background: linear-gradient(135deg, #7f5af0, #2cb67d);
       border: none; border-radius: 10px;
       color: white; font-size: 1rem; font-weight: 600;
       cursor: pointer; transition: opacity 0.2s, transform 0.1s;
     }
-    button#predictBtn:hover:not(:disabled) { opacity: 0.9; transform: translateY(-1px); }
-    button#predictBtn:disabled { opacity: 0.4; cursor: not-allowed; }
+    #predictBtn:hover:not(:disabled) { opacity: 0.9; transform: translateY(-1px); }
+    #predictBtn:disabled { opacity: 0.4; cursor: not-allowed; }
     #result {
       display: none;
       background: #0f0f1a;
@@ -86,64 +86,29 @@
     }
     #result .winner { font-size: 1.6rem; font-weight: 700; color: #2cb67d; margin-bottom: 8px; }
     .prob-row { display: flex; justify-content: space-between; margin-top: 16px; gap: 12px; }
-    .prob-box {
-      flex: 1; background: #1a1a2e;
-      border-radius: 10px; padding: 14px;
-      border: 1px solid #2a2a4a;
-    }
+    .prob-box { flex: 1; background: #1a1a2e; border-radius: 10px; padding: 14px; border: 1px solid #2a2a4a; }
     .prob-box.highlight { border-color: #2cb67d; }
     .prob-box .team-name { font-size: 0.85rem; color: #aaa; margin-bottom: 4px; }
     .prob-box .pct { font-size: 1.5rem; font-weight: 700; color: #e0e0f0; }
     .prob-box.highlight .pct { color: #2cb67d; }
     .bar-wrap { background: #2a2a4a; border-radius: 999px; height: 8px; margin-top: 16px; overflow: hidden; }
-    .bar-fill {
-      height: 100%;
-      background: linear-gradient(90deg, #7f5af0, #2cb67d);
-      border-radius: 999px;
-      transition: width 0.6s ease;
-    }
+    .bar-fill { height: 100%; background: linear-gradient(90deg, #7f5af0, #2cb67d); border-radius: 999px; transition: width 0.6s ease; }
     #espnPanel { display: none; gap: 16px; flex-direction: column; }
     .espn-teams-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-    .team-card {
-      background: #0f0f1a;
-      border: 1px solid #2a2a4a;
-      border-radius: 12px;
-      padding: 16px;
-    }
-    .team-card h3 {
-      font-size: 0.95rem; color: #7f5af0;
-      margin-bottom: 12px;
-      display: flex; align-items: center; gap: 8px;
-    }
+    .team-card { background: #0f0f1a; border: 1px solid #2a2a4a; border-radius: 12px; padding: 16px; }
+    .team-card h3 { font-size: 0.95rem; color: #7f5af0; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
     .team-card img.team-logo { width: 28px; height: 28px; object-fit: contain; }
     .form-row { display: flex; gap: 5px; margin-bottom: 10px; flex-wrap: wrap; }
-    .form-badge {
-      width: 24px; height: 24px; border-radius: 50%;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 0.7rem; font-weight: 700;
-    }
+    .form-badge { width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.7rem; font-weight: 700; }
     .form-badge.W { background: #2cb67d22; color: #2cb67d; border: 1px solid #2cb67d; }
     .form-badge.L { background: #ff6b6b22; color: #ff6b6b; border: 1px solid #ff6b6b; }
     .form-badge.D { background: #ffd70022; color: #ffd700; border: 1px solid #ffd700; }
-    .stat-row {
-      display: flex; justify-content: space-between;
-      font-size: 0.8rem; color: #aaa;
-      padding: 4px 0; border-bottom: 1px solid #1a1a2e;
-    }
+    .stat-row { display: flex; justify-content: space-between; font-size: 0.8rem; color: #aaa; padding: 4px 0; border-bottom: 1px solid #1a1a2e; }
     .stat-row span:last-child { color: #e0e0f0; font-weight: 600; }
-    .section-title {
-      font-size: 0.7rem; color: #555;
-      text-transform: uppercase; letter-spacing: 0.08em;
-      margin: 8px 0 4px;
-    }
+    .section-title { font-size: 0.7rem; color: #555; text-transform: uppercase; letter-spacing: 0.08em; margin: 8px 0 4px; }
     .espn-loader { text-align: center; color: #555; font-size: 0.85rem; padding: 12px; }
     #error { color: #ff6b6b; font-size: 0.85rem; text-align: center; display: none; }
-    .loader {
-      border: 3px solid #2a2a4a; border-top-color: #7f5af0;
-      border-radius: 50%; width: 28px; height: 28px;
-      animation: spin 0.7s linear infinite;
-      margin: 0 auto; display: none;
-    }
+    .loader { border: 3px solid #2a2a4a; border-top-color: #7f5af0; border-radius: 50%; width: 28px; height: 28px; animation: spin 0.7s linear infinite; margin: 0 auto; display: none; }
     @keyframes spin { to { transform: rotate(360deg); } }
     .quota { font-size: 0.75rem; color: #555; text-align: right; }
   </style>
@@ -154,7 +119,6 @@
 <p class="subtitle">Odds en tiempo real + estado del equipo vía ESPN</p>
 
 <div class="card">
-
   <div>
     <label>1. Selecciona el deporte</label>
     <div class="select-wrapper">
@@ -166,7 +130,6 @@
       </select>
     </div>
   </div>
-
   <div>
     <label>2. Selecciona la liga</label>
     <div class="select-wrapper">
@@ -175,7 +138,6 @@
       </select>
     </div>
   </div>
-
   <div class="teams-row">
     <div>
       <label>3. Equipo A</label>
@@ -194,43 +156,97 @@
       </div>
     </div>
   </div>
-
   <div id="error">⚠️ <span id="errorMsg"></span></div>
   <div class="loader" id="loader"></div>
-
   <button id="predictBtn" disabled>Predecir ganador</button>
-
   <div id="result">
-    <div style="color:#888; font-size:0.8rem; margin-bottom:6px;">GANADOR MÁS PROBABLE (según mercado)</div>
+    <div style="color:#888;font-size:0.8rem;margin-bottom:6px;">GANADOR MÁS PROBABLE (según mercado)</div>
     <div class="winner" id="winnerName"></div>
-    <div style="color:#666; font-size:0.8rem" id="bookmakerCount"></div>
+    <div style="color:#666;font-size:0.8rem" id="bookmakerCount"></div>
     <div class="prob-row">
-      <div class="prob-box" id="boxA">
-        <div class="team-name" id="nameA"></div>
-        <div class="pct" id="pctA"></div>
-      </div>
-      <div class="prob-box" id="boxB">
-        <div class="team-name" id="nameB"></div>
-        <div class="pct" id="pctB"></div>
-      </div>
+      <div class="prob-box" id="boxA"><div class="team-name" id="nameA"></div><div class="pct" id="pctA"></div></div>
+      <div class="prob-box" id="boxB"><div class="team-name" id="nameB"></div><div class="pct" id="pctB"></div></div>
     </div>
-    <div class="bar-wrap">
-      <div class="bar-fill" id="barFill"></div>
-    </div>
+    <div class="bar-wrap"><div class="bar-fill" id="barFill"></div></div>
   </div>
-
   <div id="espnPanel">
-    <div style="font-size:0.75rem; color:#555; text-transform:uppercase; letter-spacing:0.08em;">
-      📡 Estado del equipo — ESPN
-    </div>
+    <div style="font-size:0.75rem;color:#555;text-transform:uppercase;letter-spacing:0.08em;">📡 Estado del equipo — ESPN</div>
     <div class="espn-teams-grid" id="espnGrid"></div>
   </div>
-
   <div class="quota" id="quotaInfo"></div>
 </div>
 
-<!-- ✅ SCRIPT JUSTO ANTES DEL CIERRE DE BODY -->
 <script>
-const API_KEY   = '27efeb9368c8c4d45c578bb7d0136365';
-const BASE      = 'https://api.the-odds-api.com/v4';
-const ESPN      = 'https://site.api.espn.com/apis/site/v2/sp
+document.addEventListener('DOMContentLoaded', function() {
+
+  const API_KEY = '27efeb9368c8c4d45c578bb7d0136365';
+  const BASE    = 'https://api.the-odds-api.com/v4';
+  const ESPN    = 'https://site.api.espn.com/apis/site/v2/sports';
+
+  const ESPN_LEAGUE_MAP = {
+    soccer_epl:                        { sport: 'soccer', league: 'eng.1' },
+    soccer_spain_la_liga:              { sport: 'soccer', league: 'esp.1' },
+    soccer_spain_segunda_division:     { sport: 'soccer', league: 'esp.2' },
+    soccer_germany_bundesliga:         { sport: 'soccer', league: 'ger.1' },
+    soccer_germany_bundesliga2:        { sport: 'soccer', league: 'ger.2' },
+    soccer_italy_serie_a:              { sport: 'soccer', league: 'ita.1' },
+    soccer_italy_serie_b:              { sport: 'soccer', league: 'ita.2' },
+    soccer_france_ligue_one:           { sport: 'soccer', league: 'fra.1' },
+    soccer_france_ligue_two:           { sport: 'soccer', league: 'fra.2' },
+    soccer_portugal_primeira_liga:     { sport: 'soccer', league: 'por.1' },
+    soccer_netherlands_eredivisie:     { sport: 'soccer', league: 'ned.1' },
+    soccer_belgium_first_div:          { sport: 'soccer', league: 'bel.1' },
+    soccer_turkey_super_league:        { sport: 'soccer', league: 'tur.1' },
+    soccer_spl:                        { sport: 'soccer', league: 'sco.1' },
+    soccer_usa_mls:                    { sport: 'soccer', league: 'usa.1' },
+    soccer_mexico_ligamx:              { sport: 'soccer', league: 'mex.1' },
+    soccer_brazil_campeonato:          { sport: 'soccer', league: 'bra.1' },
+    soccer_argentina_primera_division: { sport: 'soccer', league: 'arg.1' },
+    soccer_chile_campeonato:           { sport: 'soccer', league: 'chi.1' },
+    soccer_saudi_arabia_pro_league:    { sport: 'soccer', league: 'sau.1' },
+    soccer_japan_j_league:             { sport: 'soccer', league: 'jpn.1' },
+    soccer_australia_aleague:          { sport: 'soccer', league: 'aus.1' },
+    soccer_uefa_champs_league:         { sport: 'soccer', league: 'UEFA.Champions_League' },
+    soccer_uefa_europa_league:         { sport: 'soccer', league: 'UEFA.Europa_League' },
+    soccer_conmebol_copa_libertadores: { sport: 'soccer', league: 'conmebol.libertadores' },
+    basketball_nba:                    { sport: 'basketball', league: 'nba' },
+    basketball_nba_preseason:          { sport: 'basketball', league: 'nba' },
+    basketball_wnba:                   { sport: 'basketball', league: 'wnba' },
+    basketball_ncaab:                  { sport: 'basketball', league: 'mens-college-basketball' },
+    baseball_mlb:                      { sport: 'baseball', league: 'mlb' },
+    baseball_mlb_preseason:            { sport: 'baseball', league: 'mlb' },
+  };
+
+  const NBA_TEAMS = [
+    "Atlanta Hawks","Boston Celtics","Brooklyn Nets","Charlotte Hornets",
+    "Chicago Bulls","Cleveland Cavaliers","Dallas Mavericks","Denver Nuggets",
+    "Detroit Pistons","Golden State Warriors","Houston Rockets","Indiana Pacers",
+    "Los Angeles Clippers","Los Angeles Lakers","Memphis Grizzlies","Miami Heat",
+    "Milwaukee Bucks","Minnesota Timberwolves","New Orleans Pelicans","New York Knicks",
+    "Oklahoma City Thunder","Orlando Magic","Philadelphia 76ers","Phoenix Suns",
+    "Portland Trail Blazers","Sacramento Kings","San Antonio Spurs","Toronto Raptors",
+    "Utah Jazz","Washington Wizards"
+  ];
+
+  const MLB_TEAMS = [
+    "Arizona Diamondbacks","Atlanta Braves","Baltimore Orioles","Boston Red Sox",
+    "Chicago Cubs","Chicago White Sox","Cincinnati Reds","Cleveland Guardians",
+    "Colorado Rockies","Detroit Tigers","Houston Astros","Kansas City Royals",
+    "Los Angeles Angels","Los Angeles Dodgers","Miami Marlins","Milwaukee Brewers",
+    "Minnesota Twins","New York Mets","New York Yankees","Oakland Athletics",
+    "Philadelphia Phillies","Pittsburgh Pirates","San Diego Padres","San Francisco Giants",
+    "Seattle Mariners","St. Louis Cardinals","Tampa Bay Rays","Texas Rangers",
+    "Toronto Blue Jays","Washington Nationals"
+  ];
+
+  const LEAGUES = {
+    soccer: [
+      { key: 'soccer_uefa_champs_league',               title: '🏆 UEFA Champions League' },
+      { key: 'soccer_uefa_champs_league_qualification', title: '🏆 UEFA Champions League (Clasificación)' },
+      { key: 'soccer_uefa_europa_league',               title: '🏆 UEFA Europa League' },
+      { key: 'soccer_uefa_europa_conference_league',    title: '🏆 UEFA Conference League' },
+      { key: 'soccer_uefa_nations_league',              title: '🏆 UEFA Nations League' },
+      { key: 'soccer_uefa_euro_qualification',          title: '🏆 UEFA Euro (Clasificación)' },
+      { key: 'soccer_epl',                              title: '🏴󠁧󠁢󠁥󠁮󠁧󠁿 Premier League' },
+      { key: 'soccer_efl_champ',                        title: '🏴󠁧󠁢󠁥󠁮󠁧󠁿 Championship' },
+      { key: 'soccer_england_league1',                  title: '🏴󠁧󠁢󠁥󠁮󠁧󠁿 League
