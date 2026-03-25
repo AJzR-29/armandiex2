@@ -35,37 +35,18 @@
       flex-direction: column;
       gap: 20px;
     }
-    label {
-      font-size: 0.8rem;
-      color: #888;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-      margin-bottom: 6px;
-      display: block;
-    }
+    label { font-size: 0.8rem; color: #888; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 6px; display: block; }
     select {
-      width: 100%;
-      padding: 12px 16px;
-      background: #0f0f1a;
-      border: 1px solid #3a3a5c;
-      border-radius: 10px;
-      color: #e0e0f0;
-      font-size: 1rem;
-      appearance: none;
-      cursor: pointer;
-      transition: border-color 0.2s;
+      width: 100%; padding: 12px 16px;
+      background: #0f0f1a; border: 1px solid #3a3a5c;
+      border-radius: 10px; color: #e0e0f0;
+      font-size: 1rem; appearance: none;
+      cursor: pointer; transition: border-color 0.2s;
     }
     select:focus { outline: none; border-color: #7f5af0; }
     select:disabled { opacity: 0.4; cursor: not-allowed; }
     .select-wrapper { position: relative; }
-    .select-wrapper::after {
-      content: '▾';
-      position: absolute;
-      right: 14px; top: 50%;
-      transform: translateY(-50%);
-      color: #7f5af0;
-      pointer-events: none;
-    }
+    .select-wrapper::after { content: '▾'; position: absolute; right: 14px; top: 50%; transform: translateY(-50%); color: #7f5af0; pointer-events: none; }
     .teams-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
     #predictBtn {
       padding: 14px;
@@ -76,14 +57,9 @@
     }
     #predictBtn:hover:not(:disabled) { opacity: 0.9; transform: translateY(-1px); }
     #predictBtn:disabled { opacity: 0.4; cursor: not-allowed; }
-    #result {
-      display: none;
-      background: #0f0f1a;
-      border: 1px solid #3a3a5c;
-      border-radius: 12px;
-      padding: 24px;
-      text-align: center;
-    }
+
+    /* Resultado odds */
+    #result { display: none; background: #0f0f1a; border: 1px solid #3a3a5c; border-radius: 12px; padding: 24px; text-align: center; }
     #result .winner { font-size: 1.6rem; font-weight: 700; color: #2cb67d; margin-bottom: 8px; }
     .prob-row { display: flex; justify-content: space-between; margin-top: 16px; gap: 12px; }
     .prob-box { flex: 1; background: #1a1a2e; border-radius: 10px; padding: 14px; border: 1px solid #2a2a4a; }
@@ -93,13 +69,46 @@
     .prob-box.highlight .pct { color: #2cb67d; }
     .bar-wrap { background: #2a2a4a; border-radius: 999px; height: 8px; margin-top: 16px; overflow: hidden; }
     .bar-fill { height: 100%; background: linear-gradient(90deg, #7f5af0, #2cb67d); border-radius: 999px; transition: width 0.6s ease; }
+
+    /* Score combinado ESPN + Odds */
+    #combinedScore {
+      display: none;
+      background: #0f0f1a;
+      border: 1px solid #7f5af044;
+      border-radius: 12px;
+      padding: 20px;
+      text-align: center;
+    }
+    #combinedScore .combined-title { font-size: 0.75rem; color: #7f5af0; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 12px; }
+    #combinedScore .combined-winner { font-size: 1.4rem; font-weight: 700; color: #ffd700; margin-bottom: 6px; }
+    #combinedScore .combined-sub { font-size: 0.8rem; color: #888; margin-bottom: 14px; }
+    .combined-bars { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 8px; }
+    .combined-bar-item { background: #1a1a2e; border-radius: 10px; padding: 12px; border: 1px solid #2a2a4a; }
+    .combined-bar-item.best { border-color: #ffd700; }
+    .combined-bar-item .cb-name { font-size: 0.8rem; color: #aaa; margin-bottom: 6px; }
+    .combined-bar-item .cb-score { font-size: 1.3rem; font-weight: 700; color: #e0e0f0; }
+    .combined-bar-item.best .cb-score { color: #ffd700; }
+    .combined-bar-item .cb-detail { font-size: 0.72rem; color: #666; margin-top: 4px; }
+    .confidence-badge {
+      display: inline-block;
+      margin-top: 10px;
+      padding: 4px 14px;
+      border-radius: 999px;
+      font-size: 0.78rem;
+      font-weight: 600;
+    }
+    .conf-high   { background: #2cb67d22; color: #2cb67d; border: 1px solid #2cb67d; }
+    .conf-medium { background: #ffd70022; color: #ffd700; border: 1px solid #ffd700; }
+    .conf-low    { background: #ff6b6b22; color: #ff6b6b; border: 1px solid #ff6b6b; }
+
+    /* Panel ESPN */
     #espnPanel { display: none; gap: 16px; flex-direction: column; }
     .espn-teams-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
     .team-card { background: #0f0f1a; border: 1px solid #2a2a4a; border-radius: 12px; padding: 16px; }
     .team-card h3 { font-size: 0.95rem; color: #7f5af0; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
     .team-card img.team-logo { width: 28px; height: 28px; object-fit: contain; }
     .form-row { display: flex; gap: 5px; margin-bottom: 10px; flex-wrap: wrap; }
-    .form-badge { width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.7rem; font-weight: 700; }
+    .form-badge { width: 26px; height: 26px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.7rem; font-weight: 700; cursor: default; }
     .form-badge.W { background: #2cb67d22; color: #2cb67d; border: 1px solid #2cb67d; }
     .form-badge.L { background: #ff6b6b22; color: #ff6b6b; border: 1px solid #ff6b6b; }
     .form-badge.D { background: #ffd70022; color: #ffd700; border: 1px solid #ffd700; }
@@ -107,6 +116,11 @@
     .stat-row span:last-child { color: #e0e0f0; font-weight: 600; }
     .section-title { font-size: 0.7rem; color: #555; text-transform: uppercase; letter-spacing: 0.08em; margin: 8px 0 4px; }
     .espn-loader { text-align: center; color: #555; font-size: 0.85rem; padding: 12px; }
+    .form-score-bar { margin-top: 8px; }
+    .form-score-label { display: flex; justify-content: space-between; font-size: 0.75rem; color: #888; margin-bottom: 4px; }
+    .form-score-track { background: #2a2a4a; border-radius: 999px; height: 6px; overflow: hidden; }
+    .form-score-fill { height: 100%; border-radius: 999px; transition: width 0.6s ease; }
+
     #error { color: #ff6b6b; font-size: 0.85rem; text-align: center; display: none; }
     .loader { border: 3px solid #2a2a4a; border-top-color: #7f5af0; border-radius: 50%; width: 28px; height: 28px; animation: spin 0.7s linear infinite; margin: 0 auto; display: none; }
     @keyframes spin { to { transform: rotate(360deg); } }
@@ -116,7 +130,7 @@
 <body>
 
 <h1>⚽🏀⚾ Predictor de Partidos</h1>
-<p class="subtitle">Odds en tiempo real + estado del equipo vía ESPN</p>
+<p class="subtitle">Odds en tiempo real + ESPN forma reciente + Score combinado</p>
 
 <div class="card">
   <div>
@@ -142,25 +156,23 @@
     <div>
       <label>3. Equipo A</label>
       <div class="select-wrapper">
-        <select id="teamA" disabled>
-          <option value="">— Elige liga primero —</option>
-        </select>
+        <select id="teamA" disabled><option value="">— Elige liga primero —</option></select>
       </div>
     </div>
     <div>
       <label>4. Equipo B</label>
       <div class="select-wrapper">
-        <select id="teamB" disabled>
-          <option value="">— Elige liga primero —</option>
-        </select>
+        <select id="teamB" disabled><option value="">— Elige liga primero —</option></select>
       </div>
     </div>
   </div>
   <div id="error">⚠️ <span id="errorMsg"></span></div>
   <div class="loader" id="loader"></div>
   <button id="predictBtn" disabled>Predecir ganador</button>
+
+  <!-- Resultado odds -->
   <div id="result">
-    <div style="color:#888;font-size:0.8rem;margin-bottom:6px;">GANADOR MÁS PROBABLE (según mercado)</div>
+    <div style="color:#888;font-size:0.8rem;margin-bottom:6px;">PROBABILIDAD DE MERCADO (ODDS)</div>
     <div class="winner" id="winnerName"></div>
     <div style="color:#666;font-size:0.8rem" id="bookmakerCount"></div>
     <div class="prob-row">
@@ -169,10 +181,33 @@
     </div>
     <div class="bar-wrap"><div class="bar-fill" id="barFill"></div></div>
   </div>
+
+  <!-- Score combinado -->
+  <div id="combinedScore">
+    <div class="combined-title">🧠 Predicción combinada (Odds 60% + Forma ESPN 40%)</div>
+    <div class="combined-winner" id="combinedWinner"></div>
+    <div class="combined-sub" id="combinedSub"></div>
+    <div class="combined-bars">
+      <div class="combined-bar-item" id="cbBoxA">
+        <div class="cb-name" id="cbNameA"></div>
+        <div class="cb-score" id="cbScoreA"></div>
+        <div class="cb-detail" id="cbDetailA"></div>
+      </div>
+      <div class="combined-bar-item" id="cbBoxB">
+        <div class="cb-name" id="cbNameB"></div>
+        <div class="cb-score" id="cbScoreB"></div>
+        <div class="cb-detail" id="cbDetailB"></div>
+      </div>
+    </div>
+    <div id="confidenceBadge"></div>
+  </div>
+
+  <!-- Panel ESPN -->
   <div id="espnPanel">
     <div style="font-size:0.75rem;color:#555;text-transform:uppercase;letter-spacing:0.08em;">📡 Estado del equipo — ESPN</div>
     <div class="espn-teams-grid" id="espnGrid"></div>
   </div>
+
   <div class="quota" id="quotaInfo"></div>
 </div>
 
@@ -246,7 +281,6 @@ document.addEventListener('DOMContentLoaded', function() {
       { key: 'soccer_uefa_europa_league',               title: '🏆 UEFA Europa League' },
       { key: 'soccer_uefa_europa_conference_league',    title: '🏆 UEFA Conference League' },
       { key: 'soccer_uefa_nations_league',              title: '🏆 UEFA Nations League' },
-      { key: 'soccer_uefa_euro_qualification',          title: '🏆 UEFA Euro (Clasificación)' },
       { key: 'soccer_epl',                              title: '🏴󠁧󠁢󠁥󠁮󠁧󠁿 Premier League' },
       { key: 'soccer_efl_champ',                        title: '🏴󠁧󠁢󠁥󠁮󠁧󠁿 Championship' },
       { key: 'soccer_england_league1',                  title: '🏴󠁧󠁢󠁥󠁮󠁧󠁿 League 1' },
@@ -275,13 +309,9 @@ document.addEventListener('DOMContentLoaded', function() {
       { key: 'soccer_austria_bundesliga',               title: '🇦🇹 Bundesliga Austria' },
       { key: 'soccer_switzerland_superleague',          title: '🇨🇭 Super League Suiza' },
       { key: 'soccer_poland_ekstraklasa',               title: '🇵🇱 Ekstraklasa' },
-      { key: 'soccer_russia_premier_league',            title: '🇷🇺 Premier League Rusia' },
       { key: 'soccer_denmark_superliga',                title: '🇩🇰 Superliga Dinamarca' },
       { key: 'soccer_norway_eliteserien',               title: '🇳🇴 Eliteserien' },
       { key: 'soccer_sweden_allsvenskan',               title: '🇸🇪 Allsvenskan' },
-      { key: 'soccer_sweden_superettan',                title: '🇸🇪 Superettan' },
-      { key: 'soccer_finland_veikkausliiga',            title: '🇫🇮 Veikkausliiga' },
-      { key: 'soccer_league_of_ireland',                title: '🇮🇪 League of Ireland' },
       { key: 'soccer_conmebol_copa_libertadores',       title: '🌎 Copa Libertadores' },
       { key: 'soccer_conmebol_copa_sudamericana',       title: '🌎 Copa Sudamericana' },
       { key: 'soccer_conmebol_copa_america',            title: '🌎 Copa América' },
@@ -291,59 +321,51 @@ document.addEventListener('DOMContentLoaded', function() {
       { key: 'soccer_chile_campeonato',                 title: '🇨🇱 Primera División Chile' },
       { key: 'soccer_mexico_ligamx',                    title: '🇲🇽 Liga MX' },
       { key: 'soccer_usa_mls',                          title: '🇺🇸 MLS' },
-      { key: 'soccer_concacaf_leagues_cup',             title: '🌎 CONCACAF Leagues Cup' },
       { key: 'soccer_saudi_arabia_pro_league',          title: '🇸🇦 Saudi Pro League' },
-      { key: 'soccer_china_superleague',                title: '🇨🇳 Super League China' },
       { key: 'soccer_japan_j_league',                   title: '🇯🇵 J League' },
       { key: 'soccer_korea_kleague1',                   title: '🇰🇷 K League 1' },
       { key: 'soccer_australia_aleague',                title: '🇦🇺 A-League' },
       { key: 'soccer_fifa_world_cup',                   title: '🌍 FIFA World Cup' },
       { key: 'soccer_fifa_club_world_cup',              title: '🌍 FIFA Club World Cup' },
-      { key: 'soccer_africa_cup_of_nations',            title: '🌍 Africa Cup of Nations' },
     ],
     basketball: [
-      { key: 'basketball_nba',                       title: '🇺🇸 NBA',                          staticTeams: NBA_TEAMS },
-      { key: 'basketball_nba_preseason',             title: '🇺🇸 NBA Preseason',                staticTeams: NBA_TEAMS },
+      { key: 'basketball_nba',                       title: '🇺🇸 NBA',             staticTeams: NBA_TEAMS },
+      { key: 'basketball_nba_preseason',             title: '🇺🇸 NBA Preseason',   staticTeams: NBA_TEAMS },
       { key: 'basketball_nba_all_stars',             title: '🇺🇸 NBA All Star' },
-      { key: 'basketball_nba_summer_league',         title: '🇺🇸 NBA Summer League' },
       { key: 'basketball_nba_championship_winner',   title: '🇺🇸 NBA Championship (Futuros)' },
       { key: 'basketball_wnba',                      title: '🇺🇸 WNBA' },
       { key: 'basketball_ncaab',                     title: '🇺🇸 NCAA Basketball' },
-      { key: 'basketball_wncaab',                    title: '🇺🇸 NCAA Basketball (Femenino)' },
-      { key: 'basketball_ncaab_championship_winner', title: '🇺🇸 NCAA Championship (Futuros)' },
       { key: 'basketball_euroleague',                title: '🇪🇺 EuroLeague' },
       { key: 'basketball_nbl',                       title: '🇦🇺 NBL Australia' },
-      { key: 'basketball_cba',                       title: '🇨🇳 CBA (China)' },
     ],
     baseball: [
       { key: 'baseball_mlb',                       title: '🇺🇸 MLB',           staticTeams: MLB_TEAMS },
       { key: 'baseball_mlb_preseason',             title: '🇺🇸 MLB Preseason', staticTeams: MLB_TEAMS },
       { key: 'baseball_mlb_world_series_winner',   title: '🇺🇸 MLB World Series (Futuros)' },
-      { key: 'baseball_milb',                      title: '🇺🇸 Minor League (MiLB)' },
-      { key: 'baseball_ncaa',                      title: '🇺🇸 NCAA Baseball' },
       { key: 'baseball_npb',                       title: '🇯🇵 NPB (Japón)' },
       { key: 'baseball_kbo',                       title: '🇰🇷 KBO League (Corea)' },
     ]
   };
 
-  // ── DOM refs ────────────────────────────────────────────
-  const sportSelect  = document.getElementById('sportSelect');
-  const leagueSelect = document.getElementById('leagueSelect');
-  const teamA        = document.getElementById('teamA');
-  const teamB        = document.getElementById('teamB');
-  const predictBtn   = document.getElementById('predictBtn');
-  const loader       = document.getElementById('loader');
-  const errorDiv     = document.getElementById('error');
-  const errorMsg     = document.getElementById('errorMsg');
-  const resultDiv    = document.getElementById('result');
-  const espnPanel    = document.getElementById('espnPanel');
-  const espnGrid     = document.getElementById('espnGrid');
-  const quotaInfo    = document.getElementById('quotaInfo');
+  // DOM refs
+  const sportSelect   = document.getElementById('sportSelect');
+  const leagueSelect  = document.getElementById('leagueSelect');
+  const teamA         = document.getElementById('teamA');
+  const teamB         = document.getElementById('teamB');
+  const predictBtn    = document.getElementById('predictBtn');
+  const loader        = document.getElementById('loader');
+  const errorDiv      = document.getElementById('error');
+  const errorMsg      = document.getElementById('errorMsg');
+  const resultDiv     = document.getElementById('result');
+  const combinedDiv   = document.getElementById('combinedScore');
+  const espnPanel     = document.getElementById('espnPanel');
+  const espnGrid      = document.getElementById('espnGrid');
+  const quotaInfo     = document.getElementById('quotaInfo');
 
   let eventsCache  = [];
   let espnTeamsMap = {};
+  let espnDataCache = {};  // guarda datos ESPN por nombre de equipo
 
-  // ── Helpers ─────────────────────────────────────────────
   function showError(msg) { errorMsg.textContent = msg; errorDiv.style.display = 'block'; }
   function hideError()    { errorDiv.style.display = 'none'; }
   function setLoading(on) { loader.style.display = on ? 'block' : 'none'; }
@@ -351,26 +373,40 @@ document.addEventListener('DOMContentLoaded', function() {
 
   function getAvgProb(events, name) {
     let total = 0, count = 0;
-    events.forEach(ev => {
+    events.forEach(function(ev) {
       if (ev.home_team !== name && ev.away_team !== name) return;
-      ev.bookmakers.forEach(bk => {
-        const h2h = bk.markets.find(m => m.key === 'h2h');
+      ev.bookmakers.forEach(function(bk) {
+        var h2h = bk.markets.find(function(m){ return m.key === 'h2h'; });
         if (!h2h) return;
-        const out = h2h.outcomes.find(o => o.name === name);
+        var out = h2h.outcomes.find(function(o){ return o.name === name; });
         if (out) { total += oddsToProb(out.price); count++; }
       });
     });
     return count > 0 ? total / count : null;
   }
 
+  // Calcula score de forma ESPN: W=1, D=0.5, L=0
+  function calcFormScore(form) {
+    if (!form || form.length === 0) return null;
+    var weights = [1.0, 0.9, 0.8, 0.7, 0.6]; // partido más reciente pesa más
+    var total = 0, maxTotal = 0;
+    form.slice().reverse().forEach(function(f, i) {
+      var w = weights[i] || 0.5;
+      maxTotal += w;
+      if (f.result === 'W') total += w;
+      else if (f.result === 'D') total += w * 0.5;
+    });
+    return maxTotal > 0 ? total / maxTotal : null;
+  }
+
   function populateTeams(events, staticTeams) {
-    const teams = new Set(staticTeams || []);
-    events.forEach(e => { teams.add(e.home_team); teams.add(e.away_team); });
-    const sorted = [...teams].sort();
-    [teamA, teamB].forEach(sel => {
+    var teams = new Set(staticTeams || []);
+    events.forEach(function(e) { teams.add(e.home_team); teams.add(e.away_team); });
+    var sorted = Array.from(teams).sort();
+    [teamA, teamB].forEach(function(sel) {
       sel.innerHTML = '<option value="">— Elige un equipo —</option>';
-      sorted.forEach(t => {
-        const opt = document.createElement('option');
+      sorted.forEach(function(t) {
+        var opt = document.createElement('option');
         opt.value = t; opt.textContent = t;
         sel.appendChild(opt);
       });
@@ -378,216 +414,13 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   }
 
-  // ── ESPN ────────────────────────────────────────────────
+  // ESPN
   async function loadESPNTeams(leagueKey) {
-    const m = ESPN_LEAGUE_MAP[leagueKey];
+    var m = ESPN_LEAGUE_MAP[leagueKey];
     if (!m) return;
     try {
-      const res = await fetch(`${ESPN}/${m.sport}/${m.league}/teams?limit=100`);
+      var res = await fetch(ESPN + '/' + m.sport + '/' + m.league + '/teams?limit=100');
       if (!res.ok) return;
-      const data = await res.json();
-      const list = data.sports?.[0]?.leagues?.[0]?.teams || data.teams || [];
-      list.forEach(t => {
-        const team = t.team || t;
-        if (team.displayName && team.id)
-          espnTeamsMap[team.displayName] = { id: team.id, logo: team.logos?.[0]?.href || '' };
-      });
-    } catch(e) {}
-  }
-
-  async function fetchESPNTeamData(leagueKey, teamName) {
-    const m = ESPN_LEAGUE_MAP[leagueKey];
-    if (!m) return null;
-    let info = espnTeamsMap[teamName];
-    if (!info) {
-      const key = Object.keys(espnTeamsMap).find(k =>
-        k.toLowerCase().includes(teamName.toLowerCase().split(' ').pop()) ||
-        teamName.toLowerCase().includes(k.toLowerCase().split(' ').pop())
-      );
-      info = key ? espnTeamsMap[key] : null;
-    }
-    if (!info) return null;
-    try {
-      const [tRes, sRes] = await Promise.all([
-        fetch(`${ESPN}/${m.sport}/${m.league}/teams/${info.id}`),
-        fetch(`${ESPN}/${m.sport}/${m.league}/teams/${info.id}/schedule`)
-      ]);
-      const tData = tRes.ok ? await tRes.json() : null;
-      const sData = sRes.ok ? await sRes.json() : null;
-      let form = [];
-      if (sData) {
-        const played = (sData.events || []).filter(e => e.competitions?.[0]?.status?.type?.completed);
-        form = played.slice(-5).map(e => {
-          const comp = e.competitions[0];
-          const mine = comp.competitors.find(c => c.team?.id === info.id);
-          const opp  = comp.competitors.find(c => c.team?.id !== info.id);
-          const ms = parseInt(mine?.score||0), os = parseInt(opp?.score||0);
-          return { result: ms>os?'W':ms<os?'L':'D', score:`${ms}-${os}`, opponent: opp?.team?.shortDisplayName||'?', date: e.date?.substring(0,10) };
-        });
-      }
-      const record = tData?.team?.record?.items?.[0];
-      const stats  = {};
-      record?.stats?.forEach(s => { stats[s.name] = s.value; });
-      return { name: tData?.team?.displayName||teamName, logo: info.logo, wins: stats.wins??'—', losses: stats.losses??'—', pointsFor: stats.pointsFor??stats.avgPoints??'—', form };
-    } catch(e) { return null; }
-  }
-
-  function renderTeamCard(data, teamName) {
-    if (!data) return `<div class="team-card"><h3>${teamName}</h3><div style="color:#555;font-size:0.8rem">Sin datos ESPN para esta liga</div></div>`;
-    const formHTML = data.form.length
-      ? data.form.map(f=>`<div class="form-badge ${f.result}" title="${f.opponent} ${f.score} (${f.date})">${f.result}</div>`).join('')
-      : '<span style="color:#555;font-size:0.78rem">Sin historial reciente</span>';
-    const logo = data.logo ? `<img class="team-logo" src="${data.logo}" onerror="this.style.display='none'">` : '';
-    return `<div class="team-card">
-      <h3>${logo} ${data.name}</h3>
-      <div class="section-title">Forma reciente</div>
-      <div class="form-row">${formHTML}</div>
-      <div class="section-title">Temporada</div>
-      <div class="stat-row"><span>Victorias</span><span>${data.wins}</span></div>
-      <div class="stat-row"><span>Derrotas</span><span>${data.losses}</span></div>
-      ${data.pointsFor!=='—'?`<div class="stat-row"><span>Pts promedio</span><span>${typeof data.pointsFor==='number'?data.pointsFor.toFixed(1):data.pointsFor}</span></div>`:''}
-    </div>`;
-  }
-
-  // ── Sport select ────────────────────────────────────────
-  sportSelect.addEventListener('change', function() {
-    const sport = this.value;
-    hideError();
-    resultDiv.style.display  = 'none';
-    espnPanel.style.display  = 'none';
-    eventsCache  = [];
-    espnTeamsMap = {};
-
-    leagueSelect.innerHTML = '<option value="">— Elige una liga —</option>';
-    leagueSelect.disabled  = !sport;
-
-    teamA.innerHTML = '<option value="">— Primero elige liga —</option>';
-    teamA.disabled  = true;
-    teamB.innerHTML = '<option value="">— Primero elige liga —</option>';
-    teamB.disabled  = true;
-    predictBtn.disabled = true;
-
-    if (!sport) return;
-    (LEAGUES[sport] || []).forEach(function(l) {
-      const opt = document.createElement('option');
-      opt.value = l.key;
-      opt.textContent = l.title;
-      leagueSelect.appendChild(opt);
-    });
-  });
-
-  // ── League select ───────────────────────────────────────
-  leagueSelect.addEventListener('change', async function() {
-    const leagueKey = this.value;
-    hideError();
-    resultDiv.style.display = 'none';
-    espnPanel.style.display = 'none';
-
-    if (!leagueKey) {
-      teamA.innerHTML = '<option value="">— Elige liga primero —</option>'; teamA.disabled = true;
-      teamB.innerHTML = '<option value="">— Elige liga primero —</option>'; teamB.disabled = true;
-      predictBtn.disabled = true;
-      return;
-    }
-
-    teamA.innerHTML = '<option value="">— Cargando... —</option>'; teamA.disabled = true;
-    teamB.innerHTML = '<option value="">— Cargando... —</option>'; teamB.disabled = true;
-    predictBtn.disabled = true;
-    setLoading(true);
-
-    try {
-      const sport        = sportSelect.value;
-      const leagueConfig = (LEAGUES[sport] || []).find(function(l){ return l.key === leagueKey; });
-      const staticTeams  = leagueConfig && leagueConfig.staticTeams ? leagueConfig.staticTeams : [];
-
-      const [oddsRes] = await Promise.all([
-        fetch(BASE + '/sports/' + leagueKey + '/odds/?apiKey=' + API_KEY + '&regions=eu&markets=h2h&oddsFormat=decimal'),
-        loadESPNTeams(leagueKey)
-      ]);
-
-      const remaining = oddsRes.headers.get('x-requests-remaining');
-      const used      = oddsRes.headers.get('x-requests-used');
-      if (remaining !== null) quotaInfo.textContent = 'Créditos usados: ' + used + ' | Restantes: ' + remaining;
-
-      let data = [];
-      if (oddsRes.ok) { data = await oddsRes.json(); if (!Array.isArray(data)) data = []; }
-
-      if (staticTeams.length === 0 && data.length === 0) {
-        showError('No hay partidos disponibles para esta liga en este momento.');
-        setLoading(false);
-        return;
-      }
-
-      eventsCache = data;
-      populateTeams(data, staticTeams);
-
-    } catch(e) {
-      showError('Error al conectar: ' + e.message);
-    }
-    setLoading(false);
-  });
-
-  // ── Team selects ────────────────────────────────────────
-  teamA.addEventListener('change', function() {
-    hideError();
-    const a = teamA.value, b = teamB.value;
-    predictBtn.disabled = !(a && b && a !== b);
-    if (a && b && a === b) showError('Debes elegir dos equipos distintos.');
-  });
-  teamB.addEventListener('change', function() {
-    hideError();
-    const a = teamA.value, b = teamB.value;
-    predictBtn.disabled = !(a && b && a !== b);
-    if (a && b && a === b) showError('Debes elegir dos equipos distintos.');
-  });
-
-  // ── Predict ─────────────────────────────────────────────
-  predictBtn.addEventListener('click', async function() {
-    hideError();
-    resultDiv.style.display = 'none';
-    espnPanel.style.display = 'none';
-    const tA = teamA.value, tB = teamB.value;
-    if (!tA || !tB || tA === tB) { showError('Selecciona dos equipos distintos.'); return; }
-
-    let rel = eventsCache.filter(function(e){
-      return (e.home_team===tA&&e.away_team===tB)||(e.home_team===tB&&e.away_team===tA);
-    });
-    const direct = rel.length > 0;
-    if (!direct) rel = eventsCache.filter(function(e){
-      return e.home_team===tA||e.away_team===tA||e.home_team===tB||e.away_team===tB;
-    });
-
-    if (rel.length > 0) {
-      const pAr = getAvgProb(rel, tA), pBr = getAvgProb(rel, tB);
-      if (pAr !== null && pBr !== null) {
-        const tot = pAr + pBr, pA = pAr/tot, pB = pBr/tot;
-        const winner = pA >= pB ? tA : tB;
-        const bks = new Set(); rel.forEach(function(e){ e.bookmakers.forEach(function(b){ bks.add(b.key); }); });
-        document.getElementById('winnerName').textContent     = '🏆 ' + winner;
-        document.getElementById('bookmakerCount').textContent = 'Basado en ' + bks.size + ' casa' + (bks.size!==1?'s':'') + ' de apuestas · ' + (direct?'Partido directo':'Rendimiento individual');
-        document.getElementById('nameA').textContent = tA;
-        document.getElementById('pctA').textContent  = Math.round(pA*100) + '%';
-        document.getElementById('nameB').textContent = tB;
-        document.getElementById('pctB').textContent  = Math.round(pB*100) + '%';
-        document.getElementById('boxA').className    = 'prob-box' + (pA>=pB?' highlight':'');
-        document.getElementById('boxB').className    = 'prob-box' + (pB>pA?' highlight':'');
-        document.getElementById('barFill').style.width = Math.round(pA*100) + '%';
-        resultDiv.style.display = 'block';
-      }
-    } else {
-      showError('No hay odds activas para estos equipos.');
-    }
-
-    const leagueKey = leagueSelect.value;
-    if (ESPN_LEAGUE_MAP[leagueKey]) {
-      espnPanel.style.display = 'flex';
-      espnGrid.innerHTML = '<div class="espn-loader">⏳ Cargando datos ESPN...</div>';
-      const results = await Promise.all([fetchESPNTeamData(leagueKey,tA), fetchESPNTeamData(leagueKey,tB)]);
-      espnGrid.innerHTML = renderTeamCard(results[0],tA) + renderTeamCard(results[1],tB);
-    }
-  });
-
-}); // fin DOMContentLoaded
-</script>
-</body>
-</html>
+      var data = await res.json();
+      var list = (data.sports && data.sports[0] && data.sports[0].leagues && data.sports[0].leagues[0] && data.sports[0].leagues[0].teams) || data.teams || [];
+      list.forEach(function(
