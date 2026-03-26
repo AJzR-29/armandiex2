@@ -639,4 +639,178 @@ document.addEventListener('DOMContentLoaded', function () {
     if (!header) {
       header = document.createElement('div');
       header.className  = 'scanner-header';
-      header.style.cssText = 
+      header.style.cssText = 'font-size:0.75rem;color:#f7971e;text-transform:uppercase;letter-spacing:0.08em;padding:4px 0';
+      scannerPanel.appendChild(header);
+    }
+    if (filtered.length === 0) {
+      header.textContent = '❌ No hay partidos con EV ≥ ' + Math.round(evMinActive * 100) + '% en este filtro.';
+      return;
+    }
+    header.textContent = '✅ ' + filtered.length + ' partido(s) con valor encontrados hoy';
+
+    filtered.forEach(function (r) {
+      var evColor   = r.ev >= 0.10 ? '#2cb67d' : r.ev >= 0.05 ? '#ffd700' : '#ff6b6b';
+      var evLabel   = r.ev >= 0.10 ? '🟢 EV alto' : r.ev >= 0.05 ? '🟡 EV moderado' : '🔴 EV bajo';
+      var sportIcon = r.sport === 'baseball' ? '⚾' : r.sport === 'basketball' ? '🏀' : '⚽';
+
+      var mlbHTML = '';
+      if (r.sport === 'baseball') {
+        var ph = r.pitchers && r.pitchers.home;
+        var pa = r.pitchers && r.pitchers.away;
+        mlbHTML = '<div class="mlb-extras">' +
+          '<div class="mlb-extra-box">' +
+            '<div class="mlb-extra-label">⚾ Pitcher Local</div>' +
+            '<div class="mlb-extra-value">' + (ph && ph.name !== 'TBD' ? ph.name + ' · ERA ' + ph.era : '🔄 TBD') + '</div>' +
+          '</div>' +
+          '<div class="mlb-extra-box">' +
+            '<div class="mlb-extra-label">⚾ Pitcher Visita</div>' +
+            '<div class="mlb-extra-value">' + (pa && pa.name !== 'TBD' ? pa.name + ' · ERA ' + pa.era : '🔄 TBD') + '</div>' +
+          '</div>';
+        if (r.stadium) {
+          var pfColor = r.stadium.pf >= 1.10 ? '#ff6b6b' : r.stadium.pf <= 0.90 ? '#2cb67d' : '#ffd700';
+          mlbHTML +=
+            '<div class="mlb-extra-box">' +
+              '<div class="mlb-extra-label">🏟️ Estadio</div>' +
+              '<div class="mlb-extra-value">' + r.stadium.name + '</div>' +
+              '<div style="font-size:0.68rem;color:' + pfColor + ';margin-top:2px">Park Factor: ×' + r.stadium.pf.toFixed(2) +
+              (r.stadium.pf >= 1.10 ? ' 🔥 Favorece runs' : r.stadium.pf <= 0.90 ? ' 🛡️ Suprime runs' : ' ⚖️ Neutro') + '</div>' +
+            '</div>';
+        }
+        if (r.wind) {
+          var windEmoji  = r.wind.speed > 20 ? '💨' : r.wind.speed > 10 ? '🌬️' : '🍃';
+          var windImpact = r.wind.speed > 15 ? ' · Puede afectar jonrones' : '';
+          mlbHTML +=
+            '<div class="mlb-extra-box">' +
+              '<div class="mlb-extra-label">' + windEmoji + ' Viento</div>' +
+              '<div class="mlb-extra-value">' + r.wind.speed + ' km/h → ' + getWindDescription(r.wind.direction) + windImpact + '</div>' +
+              '<div style="font-size:0.68rem;color:#666;margin-top:2px">🌡️ ' + r.wind.temp + '°C en el estadio</div>' +
+            '</div>';
+        }
+        mlbHTML += '</div>';
+      }
+
+      var card = document.createElement('div');
+      card.className       = 'scanner-card';
+      card.style.cssText   = 'border:1px solid ' + evColor + '44;';
+      card.dataset.ev      = r.ev;
+      card.innerHTML =
+        '<div style="font-size:0.72rem;color:#555;margin-bottom:4px">' +
+          sportIcon + ' ⏰ ' + r.time + ' · ' + r.home + ' vs ' + r.away +
+        '</div>' +
+        '<div style="font-size:1.05rem;font-weight:700;color:' + evColor + ';margin-bottom:10px">' +
+          '✅ APOSTAR: ' + r.betTeam +
+        '</div>' +
+        '<div class="scanner-stats">' +
+          '<div class="scanner-stat"><div class="scanner-stat-label">Modelo</div><div class="scanner-stat-value" style="color:#e0e0f0">' + r.modelPct + '%</div></div>' +
+          '<div class="scanner-stat"><div class="scanner-stat-label">Casa dice</div><div class="scanner-stat-value" style="color:#aaa">' + r.mktPct + '%</div></div>' +
+          '<div class="scanner-stat"><div class="scanner-stat-label">Mejor odd</div><div class="scanner-stat-value" style="color:#ffd700">' + r.odd + '</div></div>' +
+          '<div class="scanner-stat"><div class="scanner-stat-label">Edge</div><div class="scanner-stat-value" style="color:' + evColor + '">+' + Math.round(r.edge * 100) + '%</div></div>' +
+        '</div>' +
+        mlbHTML +
+        '<div style="margin-top:8px;font-size:0.78rem;color:' + evColor + '">' +
+          evLabel + ' · EV: ' + (r.ev > 0 ? '+' : '') + (r.ev * 100).toFixed(1) + '¢ por $1 apostado' +
+        '</div>';
+      scannerPanel.appendChild(card);
+    });
+  }
+
+  scanBtn.addEventListener('click', async function () {
+    if (eventsCache.length === 0) return;
+    scanBtn.disabled    = true;
+    scanBtn.textContent = '⏳ Escaneando ' + eventsCache.length + ' partidos...';
+    scannerPanel.style.display = 'flex';
+    scannerPanel.innerHTML     = '<div style="color:#555;font-size:0.85rem;text-align:center;padding:8px">Analizando partidos...</div>';
+    scanResults = [];
+
+    var leagueKey = leagueSelect.value;
+    var sport     = sportSelect.value;
+    var isMLB     = leagueKey === 'baseball_mlb' || leagueKey === 'baseball_mlb_preseason';
+    var allPitchers = {};
+
+    if (isMLB) {
+      scanBtn.textContent = '⏳ Cargando pitchers y clima...';
+      allPitchers = await fetchMLBPitchers();
+    }
+
+    for (var i = 0; i < eventsCache.length; i++) {
+      var ev = eventsCache[i];
+      if (!isToday(ev.commence_time)) continue;
+
+      var tA = ev.home_team, tB = ev.away_team;
+      var pAr = getAvgProb([ev], tA), pBr = getAvgProb([ev], tB);
+      if (!pAr || !pBr) continue;
+
+      var tot  = pAr + pBr;
+      var mktA = pAr / tot, mktB = pBr / tot;
+      if (mktA < 0.05 || mktB < 0.05) continue;
+
+      var dataA = await fetchESPNTeamData(leagueKey, tA);
+      var dataB = await fetchESPNTeamData(leagueKey, tB);
+      var fsA   = dataA && dataA.formScore !== null ? dataA.formScore : 0.5;
+      var fsB   = dataB && dataB.formScore !== null ? dataB.formScore : 0.5;
+
+      var pfAdj        = 0;
+      var stadiumInfo  = null;
+      var windInfo     = null;
+      var pitchersInfo = { home: null, away: null };
+
+      if (isMLB) {
+        stadiumInfo = TEAM_STADIUM[tA] || null;
+        if (stadiumInfo) {
+          pfAdj    = (stadiumInfo.pf - 1) * 0.05;
+          windInfo = await fetchWindData(stadiumInfo.coords[0], stadiumInfo.coords[1]);
+        }
+        pitchersInfo = findPitchers(allPitchers, tA, tB);
+      }
+
+      var combA     = (mktA * 0.6) + (fsA * 0.4) + pfAdj;
+      var combB     = (mktB * 0.6) + (fsB * 0.4);
+      var totalComb = combA + combB;
+      var modelA    = combA / totalComb;
+      var modelB    = combB / totalComb;
+
+      var edgeA = modelA - mktA, edgeB = modelB - mktB;
+      if (Math.max(Math.abs(edgeA), Math.abs(edgeB)) < 0.05) continue;
+
+      var betTeam  = edgeA >= edgeB ? tA : tB;
+      var betEdge  = edgeA >= edgeB ? edgeA : edgeB;
+      var betModel = edgeA >= edgeB ? modelA : modelB;
+      var betMkt   = edgeA >= edgeB ? mktA : mktB;
+      var bestOdd  = getBestOdd(ev, betTeam);
+      var ev_val   = (betModel * (bestOdd - 1)) - (1 - betModel);
+
+      scanResults.push({
+        home:     tA,   away:     tB,
+        betTeam:  betTeam,
+        edge:     betEdge,
+        ev:       ev_val,
+        modelPct: Math.round(betModel * 100),
+        mktPct:   Math.round(betMkt   * 100),
+        odd:      bestOdd.toFixed(2),
+        time:     formatGameTime(ev.commence_time),
+        sport:    sport,
+        stadium:  stadiumInfo,
+        wind:     windInfo,
+        pitchers: pitchersInfo
+      });
+    }
+
+    scanResults.sort(function (a, b) { return b.ev - a.ev; });
+    scannerPanel.innerHTML    = '';
+    evFilterRow.style.display = 'flex';
+    renderScannerResults();
+    scanBtn.disabled    = false;
+    scanBtn.textContent = '🔍 Escanear todos los partidos de hoy';
+  });
+
+  // ── EV FILTERS ────────────────────────────────────────────────
+  document.querySelectorAll('.ev-filter').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      evMinActive = parseFloat(this.dataset.min);
+      document.querySelectorAll('.ev-filter').forEach(function (b) { b.classList.remove('active'); });
+      this.classList.add('active');
+      renderScannerResults();
+    });
+  });
+
+});
