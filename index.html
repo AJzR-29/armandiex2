@@ -67,12 +67,28 @@
     .loader { border: 3px solid #2a2a4a; border-top-color: #7f5af0; border-radius: 50%; width: 28px; height: 28px; animation: spin 0.7s linear infinite; margin: 0 auto; display: none; }
     @keyframes spin { to { transform: rotate(360deg); } }
     .quota { font-size: 0.75rem; color: #555; text-align: right; }
+
+    /* ── SCANNER STYLES ── */
+    .divider { border: none; border-top: 1px solid #2a2a4a; margin: 4px 0; }
+    #scanBtn { padding: 14px; background: linear-gradient(135deg, #f7971e, #ffd200); border: none; border-radius: 10px; color: #0f0f1a; font-size: 1rem; font-weight: 700; cursor: pointer; transition: opacity 0.2s, transform 0.1s; }
+    #scanBtn:hover:not(:disabled) { opacity: 0.9; transform: translateY(-1px); }
+    #scanBtn:disabled { opacity: 0.4; cursor: not-allowed; }
+    #evFilterRow { display: none; gap: 8px; flex-wrap: wrap; align-items: center; }
+    .ev-filter { padding: 6px 14px; border-radius: 999px; border: 1px solid #555; background: transparent; color: #aaa; cursor: pointer; font-size: 0.8rem; transition: all 0.2s; }
+    .ev-filter.active { background: #2cb67d22; color: #2cb67d; border-color: #2cb67d; }
+    #scannerPanel { display: none; flex-direction: column; gap: 10px; }
+    .scanner-card { background: #0f0f1a; border-radius: 12px; padding: 16px; }
+    .scanner-stats { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 8px; margin-top: 10px; }
+    .scanner-stat { background: #1a1a2e; border-radius: 8px; padding: 8px; text-align: center; }
+    .scanner-stat-label { font-size: 0.68rem; color: #555; margin-bottom: 2px; }
+    .scanner-stat-value { font-size: 0.95rem; font-weight: 700; }
   </style>
 </head>
 <body>
 <h1>⚽🏀⚾ Predictor de Partidos</h1>
-<p class="subtitle">Odds en tiempo real + ESPN forma reciente + Score combinado</p>
+<p class="subtitle">Odds en tiempo real + ESPN forma reciente + Scanner de valor diario</p>
 <div class="card">
+
   <div>
     <label>1. Selecciona el deporte</label>
     <div class="select-wrapper">
@@ -84,6 +100,7 @@
       </select>
     </div>
   </div>
+
   <div>
     <label>2. Selecciona la liga</label>
     <div class="select-wrapper">
@@ -92,6 +109,7 @@
       </select>
     </div>
   </div>
+
   <div class="teams-row">
     <div>
       <label>3. Equipo A</label>
@@ -106,9 +124,11 @@
       </div>
     </div>
   </div>
+
   <div id="error">⚠️ <span id="errorMsg"></span></div>
   <div class="loader" id="loader"></div>
   <button id="predictBtn" disabled>Predecir ganador</button>
+
   <div id="result">
     <div style="color:#888;font-size:0.8rem;margin-bottom:6px;">PROBABILIDAD DE MERCADO (ODDS)</div>
     <div class="winner" id="winnerName"></div>
@@ -119,6 +139,7 @@
     </div>
     <div class="bar-wrap"><div class="bar-fill" id="barFill"></div></div>
   </div>
+
   <div id="combinedScore">
     <div class="combined-title">🧠 Predicción combinada (Odds 60% + Forma ESPN 40%)</div>
     <div class="combined-winner" id="combinedWinner"></div>
@@ -129,10 +150,23 @@
     </div>
     <div id="confidenceBadge"></div>
   </div>
+
   <div id="espnPanel">
     <div style="font-size:0.75rem;color:#555;text-transform:uppercase;letter-spacing:0.08em;">📡 Estado del equipo — ESPN</div>
     <div class="espn-teams-grid" id="espnGrid"></div>
   </div>
+
+  <!-- ── SCANNER SECTION ── -->
+  <hr class="divider">
+  <div id="evFilterRow">
+    <span style="font-size:0.75rem;color:#888;">Filtrar por EV:</span>
+    <button class="ev-filter active" data-min="0">🟢 Todos</button>
+    <button class="ev-filter" data-min="0.05">🟡 EV &gt; 5%</button>
+    <button class="ev-filter" data-min="0.10">🔴 EV &gt; 10%</button>
+  </div>
+  <button id="scanBtn" disabled>🔍 Escanear todos los partidos de hoy</button>
+  <div id="scannerPanel"></div>
+
   <div class="quota" id="quotaInfo"></div>
 </div>
 <script src="app.js"></script>
