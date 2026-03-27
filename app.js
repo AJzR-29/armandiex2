@@ -323,8 +323,7 @@ document.addEventListener('DOMContentLoaded', function () {
     document.getElementById('cbBoxB').className='combined-bar-item'+(pB>pA?' best':'');
     document.getElementById('confidenceBadge').innerHTML='<span class="confidence-badge '+cC+'">'+cT+'</span>';
     combinedDiv.style.display='block';
-  }
-    // ── SPORT SELECTOR ────────────────────────────────────────────
+  }  // ── SPORT SELECTOR ────────────────────────────────────────────
   sportSelect.addEventListener('change', function(){
     var sport=this.value;
     hideError();
