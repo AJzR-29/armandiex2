@@ -3,7 +3,6 @@ document.addEventListener('DOMContentLoaded', function () {
   var API_KEY = '27efeb9368c8c4d45c578bb7d0136365';
   var BASE    = 'https://api.the-odds-api.com/v4';
   var ESPN    = 'https://site.api.espn.com/apis/site/v2/sports';
-  var ESPN3   = 'https://site.api.espn.com/apis/common/v3/sports';
   var MLBAPI  = 'https://statsapi.mlb.com/api/v1';
   var LEAGUE_AVG_ERA = 4.20;
 
@@ -131,17 +130,15 @@ document.addEventListener('DOMContentLoaded', function () {
     baseball_ncaa:{ sport:'baseball',league:'college-baseball' }
   };
 
-  // ── STATE ─────────────────────────────────────────────────────
-  var eventsCache   = [];
-  var espnTeamsMap  = {};
-  var espnDataCache = {};
-  var scanResults   = [];
-  var evMinActive   = 0;
-  var windCache     = {};
+  var eventsCache      = [];
+  var espnTeamsMap     = {};
+  var espnDataCache    = {};
+  var scanResults      = [];
+  var evMinActive      = 0;
+  var windCache        = {};
   var mlbScheduleCache = null;
   var mlbHittersCache  = null;
 
-  // ── DOM ───────────────────────────────────────────────────────
   var sportSelect  = document.getElementById('sportSelect');
   var leagueSelect = document.getElementById('leagueSelect');
   var teamA        = document.getElementById('teamA');
@@ -161,7 +158,6 @@ document.addEventListener('DOMContentLoaded', function () {
   var v1Panel      = document.getElementById('v1Panel');
   var mlbPanel     = document.getElementById('mlbGamesPanel');
 
-  // ── HELPERS ───────────────────────────────────────────────────
   function showError(m){ errorMsg.textContent=m; errorDiv.style.display='block'; }
   function hideError(){ errorDiv.style.display='none'; }
   function setLoading(on){ loader.style.display=on?'block':'none'; }
@@ -180,7 +176,14 @@ document.addEventListener('DOMContentLoaded', function () {
     var o={timeZone:'America/Panama'};
     return new Date(u).toLocaleDateString('es-PA',o)===new Date().toLocaleDateString('es-PA',o);
   }
-  function getWindDir(d){ return ['Norte','Noreste','Este','Sureste','Sur','Suroeste','Oeste','Noroeste'][Math.round(d/45)%8]; }
+  function getWindDir(d){
+    return ['Norte','Noreste','Este','Sureste','Sur','Suroeste','Oeste','Noroeste'][Math.round(d/45)%8];
+  }
+  function matchTeamName(a,b){
+    var al=a.toLowerCase(), bl=b.toLowerCase();
+    if(al===bl) return true;
+    return al.includes(bl.split(' ').pop())||bl.includes(al.split(' ').pop());
+  }
 
   function getAvgProb(events,name){
     var total=0,count=0;
@@ -197,7 +200,7 @@ document.addEventListener('DOMContentLoaded', function () {
   }
 
   function getBestOdd(ev,teamName){
-    var best=1, nL=teamName.toLowerCase(), nLast=nL.split(' ').pop();
+    var best=1,nL=teamName.toLowerCase(),nLast=nL.split(' ').pop();
     ev.bookmakers.forEach(function(bk){
       var h2h=bk.markets.find(function(m){return m.key==='h2h';});
       if(!h2h) return;
@@ -221,14 +224,6 @@ document.addEventListener('DOMContentLoaded', function () {
     return max>0?total/max:null;
   }
 
-  function matchTeamName(nameA, nameB){
-    var a=nameA.toLowerCase(), b=nameB.toLowerCase();
-    if(a===b) return true;
-    var aLast=a.split(' ').pop(), bLast=b.split(' ').pop();
-    return a.includes(bLast)||b.includes(aLast);
-  }
-
-  // ── OPEN-METEO ────────────────────────────────────────────────
   async function fetchWindData(lat,lon){
     var key=lat+','+lon;
     if(windCache[key]) return windCache[key];
@@ -241,12 +236,10 @@ document.addEventListener('DOMContentLoaded', function () {
   }
 
   // ── MLB STATS API ─────────────────────────────────────────────
-  // Trae pitchers confirmados + récords de equipo para hoy
   async function fetchMLBSchedule(){
     if(mlbScheduleCache) return mlbScheduleCache;
     try{
-      var date=todayStr();
-      var url=MLBAPI+'/schedule?sportId=1&date='+date+'&hydrate=probablePitcher(stats),team(record),linescore';
+      var url=MLBAPI+'/schedule?sportId=1&date='+todayStr()+'&hydrate=probablePitcher(stats),team(record),linescore';
       var res=await fetch(url);
       if(!res.ok) return {};
       var data=await res.json();
@@ -255,36 +248,31 @@ document.addEventListener('DOMContentLoaded', function () {
         (d.games||[]).forEach(function(g){
           ['home','away'].forEach(function(side){
             var t=g.teams[side];
-            var tName=t.team&&t.team.name;
-            if(!tName) return;
+            if(!t||!t.team||!t.team.name) return;
             var rec=t.leagueRecord||{};
-            var w=rec.wins||0, l=rec.losses||0;
             var pitcher=null;
             if(t.probablePitcher){
               var p=t.probablePitcher;
-              var pStats={era:'—',wins:0,losses:0,ks:0,starts:0};
+              var ps={era:'—',wins:0,losses:0,ks:0,starts:0};
               (p.stats||[]).forEach(function(s){
-                if(s.type&&s.type.displayName==='statsSingleSeason'&&s.group&&s.group.displayName==='pitching'){
+                var isPitch=s.group&&s.group.displayName==='pitching';
+                var isSeason=s.type&&s.type.displayName==='statsSingleSeason';
+                if(isPitch&&isSeason){
                   var st=s.stats||{};
-                  pStats.era   = st.era||'—';
-                  pStats.wins  = st.wins||0;
-                  pStats.losses= st.losses||0;
-                  pStats.ks    = st.strikeOuts||0;
-                  pStats.starts= st.gamesStarted||0;
+                  ps.era=st.era||'—'; ps.wins=st.wins||0; ps.losses=st.losses||0;
+                  ps.ks=st.strikeOuts||0; ps.starts=st.gamesStarted||0;
                 }
               });
-              pitcher={ name:p.fullName||'TBD', era:pStats.era, wins:pStats.wins, losses:pStats.losses, ks:pStats.ks, starts:pStats.starts };
+              pitcher={name:p.fullName||'TBD',era:ps.era,wins:ps.wins,losses:ps.losses,ks:ps.ks,starts:ps.starts};
             }
-            map[tName]={ pitcher:pitcher, wins:w, losses:l, games:w+l, teamId:t.team&&t.team.id };
+            map[t.team.name]={pitcher:pitcher,wins:rec.wins||0,losses:rec.losses||0,teamId:t.team.id};
           });
         });
       });
-      mlbScheduleCache=map;
-      return map;
-    }catch(e){ return {}; }
+      mlbScheduleCache=map; return map;
+    }catch(e){return {};}
   }
 
-  // Trae top hitters de la liga y retorna mapa { teamId: [{ name, hits, gamesPlayed, hpg }] }
   async function fetchMLBHittingLeaders(){
     if(mlbHittersCache) return mlbHittersCache;
     try{
@@ -293,31 +281,26 @@ document.addEventListener('DOMContentLoaded', function () {
       if(!res.ok) return {};
       var data=await res.json();
       var byTeam={};
-      var leaders=data.leagueLeaders&&data.leagueLeaders[0]&&data.leagueLeaders[0].leaders||[];
+      var leaders=(data.leagueLeaders&&data.leagueLeaders[0]&&data.leagueLeaders[0].leaders)||[];
       leaders.forEach(function(l){
-        var teamId=l.team&&l.team.id;
-        var teamName=l.team&&l.team.name||'—';
-        var pName=l.person&&l.person.fullName||'—';
-        var hits=parseFloat(l.value)||0;
-        if(!teamId) return;
-        if(!byTeam[teamId]) byTeam[teamId]=[];
-        byTeam[teamId].push({ name:pName, team:teamName, hits:hits, teamId:teamId });
+        var tid=l.team&&l.team.id; if(!tid) return;
+        if(!byTeam[tid]) byTeam[tid]=[];
+        byTeam[tid].push({name:(l.person&&l.person.fullName)||'—',hits:parseFloat(l.value)||0});
       });
-      mlbHittersCache=byTeam;
-      return byTeam;
-    }catch(e){ return {}; }
+      mlbHittersCache=byTeam; return byTeam;
+    }catch(e){return {};}
   }
 
-  function getTopHitters(hittersByTeam, teamId, teamGames){
+  // ── FIX: mínimo 5 juegos para H/G realista ────────────────────
+  function getTopHitters(hittersByTeam,teamId,teamGames){
     if(!hittersByTeam||!teamId) return [];
-    var list=hittersByTeam[teamId]||[];
-    var gp=Math.max(teamGames||1,1);
-    return list.slice(0,3).map(function(h){
-      return { name:h.name, hits:h.hits, hpg:h.hits/gp };
+    var gp=Math.max(teamGames||1, 5); // mínimo 5 para evitar 7.00 H/G
+    return (hittersByTeam[teamId]||[]).slice(0,3).map(function(h){
+      return {name:h.name,hits:h.hits,hpg:h.hits/gp};
     });
   }
 
-  // ── ESPN (fútbol / basketball) ────────────────────────────────
+  // ── ESPN fútbol / basketball ──────────────────────────────────
   function populateTeams(events,staticTeams){
     var teams=new Set(staticTeams||[]);
     events.forEach(function(e){teams.add(e.home_team);teams.add(e.away_team);});
@@ -367,7 +350,7 @@ document.addEventListener('DOMContentLoaded', function () {
           var comp=e.competitions[0];
           var mine=comp.competitors.find(function(c){return c.team&&c.team.id===info.id;});
           var opp=comp.competitors.find(function(c){return c.team&&c.team.id!==info.id;});
-          var ms=Number(mine&&mine.score)||0, os=Number(opp&&opp.score)||0;
+          var ms=Number(mine&&mine.score)||0,os=Number(opp&&opp.score)||0;
           return {result:ms>os?'W':ms<os?'L':'D',score:ms+'-'+os,opponent:(opp&&opp.team&&opp.team.shortDisplayName)||'?',date:e.date?e.date.substring(0,10):''};
         });
       }
@@ -375,8 +358,7 @@ document.addEventListener('DOMContentLoaded', function () {
       var stats={};
       if(record&&record.stats) record.stats.forEach(function(s){stats[s.name]=s.value;});
       var result={name:(tD&&tD.team&&tD.team.displayName)||teamName,logo:info.logo,wins:stats.wins||0,losses:stats.losses||0,pointsFor:stats.pointsFor||stats.avgPoints||'—',form:form,formScore:calcFormScore(form)};
-      espnDataCache[teamName]=result;
-      return result;
+      espnDataCache[teamName]=result; return result;
     }catch(e){return null;}
   }
 
@@ -387,15 +369,15 @@ document.addEventListener('DOMContentLoaded', function () {
     var logo=data.logo?'<img class="team-logo" src="'+data.logo+'" onerror="this.style.display=\'none\'">':'';
     var fsV=data.formScore!==null?Math.round(data.formScore*100):null;
     var fsB=fsV!==null?'<div class="form-score-bar"><div class="form-score-label"><span>Forma ESPN</span><span>'+fsV+'%</span></div><div class="form-score-track"><div class="form-score-fill" style="width:'+fsV+'%;background:'+(fsV>=60?'#2cb67d':fsV>=40?'#ffd700':'#ff6b6b')+'"></div></div></div>':'';
-    return '<div class="team-card"><h3>'+logo+' '+data.name+'</h3><div class="section-title">Forma reciente</div><div class="form-row">'+fH+'</div>'+fsB+'<div class="section-title">Temporada</div><div class="stat-row"><span>Victorias</span><span>'+(ns?'🆕':data.wins)+'</span></div><div class="stat-row"><span>Derrotas</span><span>'+(ns?'🆕':data.losses)+'</span></div>'+(data.pointsFor!=='—'?'<div class="stat-row"><span>Pts promedio</span><span>'+(typeof data.pointsFor==='number'?data.pointsFor.toFixed(1):data.pointsFor)+'</span></div>':'')+'</div>';
+    return '<div class="team-card"><h3>'+logo+data.name+'</h3><div class="section-title">Forma reciente</div><div class="form-row">'+fH+'</div>'+fsB+'<div class="section-title">Temporada</div><div class="stat-row"><span>Victorias</span><span>'+(ns?'🆕':data.wins)+'</span></div><div class="stat-row"><span>Derrotas</span><span>'+(ns?'🆕':data.losses)+'</span></div>'+(data.pointsFor!=='—'?'<div class="stat-row"><span>Pts promedio</span><span>'+(typeof data.pointsFor==='number'?data.pointsFor.toFixed(1):data.pointsFor)+'</span></div>':'')+'</div>';
   }
 
   function renderCombinedScore(tA,tB,probA,probB,dataA,dataB){
     var fsA=dataA&&dataA.formScore!==null?dataA.formScore:0.5;
     var fsB=dataB&&dataB.formScore!==null?dataB.formScore:0.5;
     var hasE=(dataA&&dataA.formScore!==null)||(dataB&&dataB.formScore!==null);
-    var cA=(probA*0.6)+(fsA*0.4), cB=(probB*0.6)+(fsB*0.4), tot=cA+cB;
-    var pA=cA/tot, pB=cB/tot, diff=Math.abs(pA-pB);
+    var cA=(probA*0.6)+(fsA*0.4),cB=(probB*0.6)+(fsB*0.4),tot=cA+cB;
+    var pA=cA/tot,pB=cB/tot,diff=Math.abs(pA-pB);
     var cC=diff>0.15?'conf-high':diff>0.07?'conf-medium':'conf-low';
     var cT=diff>0.15?'🟢 Alta confianza':diff>0.07?'🟡 Confianza media':'🔴 Partido muy parejo';
     document.getElementById('combinedWinner').textContent='🏆 '+(pA>=pB?tA:tB);
@@ -411,36 +393,28 @@ document.addEventListener('DOMContentLoaded', function () {
   }  // ── MLB PANEL ─────────────────────────────────────────────────
   async function loadMLBGamesPanel(leagueKey){
     mlbPanel.style.display='flex'; mlbPanel.style.flexDirection='column'; mlbPanel.style.gap='14px';
-    mlbPanel.innerHTML='<div style="text-align:center;color:#555;padding:24px;font-size:0.85rem">⏳ Cargando partidos, pitchers y estadísticas de bateo...</div>';
+    mlbPanel.innerHTML='<div style="text-align:center;color:#555;padding:24px;font-size:0.85rem">⏳ Cargando partidos, pitchers y estadísticas...</div>';
     var espnMap=ESPN_LEAGUE_MAP[leagueKey]||{sport:'baseball',league:'mlb'};
     var isMLB=leagueKey==='baseball_mlb'||leagueKey==='baseball_mlb_preseason';
     try{
       var fetchOdds=leagueKey!=='baseball_ncaa'
         ?fetch(BASE+'/sports/'+leagueKey+'/odds/?apiKey='+API_KEY+'&regions=eu&markets=h2h&oddsFormat=decimal')
         :Promise.resolve(null);
-
-      var promises=[
-        fetch(ESPN+'/'+espnMap.sport+'/'+espnMap.league+'/scoreboard'),
-        fetchOdds
-      ];
-      if(isMLB){
-        promises.push(fetchMLBSchedule());
-        promises.push(fetchMLBHittingLeaders());
-      }
+      var promises=[fetch(ESPN+'/'+espnMap.sport+'/'+espnMap.league+'/scoreboard'),fetchOdds];
+      if(isMLB){ promises.push(fetchMLBSchedule()); promises.push(fetchMLBHittingLeaders()); }
       var rs=await Promise.all(promises);
       var scoreData=rs[0].ok?await rs[0].json():null;
       var oddsData=[];
       if(rs[1]&&rs[1].ok){
         oddsData=await rs[1].json(); if(!Array.isArray(oddsData)) oddsData=[];
-        var rem=rs[1].headers.get('x-requests-remaining'), used=rs[1].headers.get('x-requests-used');
+        var rem=rs[1].headers.get('x-requests-remaining'),used=rs[1].headers.get('x-requests-used');
         if(rem!==null) quotaInfo.textContent='Créditos usados: '+used+' | Restantes: '+rem;
       }
-      var mlbSchedule=isMLB?(rs[2]||{}):{};
-      var mlbHitters =isMLB?(rs[3]||{}):{};
-
+      var mlbSched=isMLB?(rs[2]||{}):{};
+      var mlbHit  =isMLB?(rs[3]||{}):{};
       var events=(scoreData&&scoreData.events)||[];
       mlbPanel.innerHTML='';
-      if(events.length===0){
+      if(!events.length){
         mlbPanel.innerHTML='<div style="text-align:center;color:#555;padding:24px">📅 No hay partidos hoy en esta liga.</div>';
         return;
       }
@@ -448,17 +422,15 @@ document.addEventListener('DOMContentLoaded', function () {
       hdr.style.cssText='font-size:0.75rem;color:#f7971e;text-transform:uppercase;letter-spacing:0.08em;padding:4px 0';
       hdr.textContent='⚾ '+events.length+' partido(s) programados hoy';
       mlbPanel.appendChild(hdr);
-
       for(var i=0;i<events.length;i++){
-        var card=await buildGameCard(events[i],oddsData,mlbSchedule,mlbHitters,isMLB);
-        mlbPanel.appendChild(card);
+        mlbPanel.appendChild(await buildGameCard(events[i],oddsData,mlbSched,mlbHit,isMLB));
       }
     }catch(e){
       mlbPanel.innerHTML='<div style="color:#ff6b6b;padding:16px">❌ Error: '+e.message+'</div>';
     }
   }
 
-  async function buildGameCard(ev,oddsData,mlbSchedule,mlbHitters,isMLB){
+  async function buildGameCard(ev,oddsData,mlbSched,mlbHit,isMLB){
     var comp=ev.competitions&&ev.competitions[0];
     var homeC=((comp&&comp.competitors)||[]).find(function(c){return c.homeAway==='home';})||{};
     var awayC=((comp&&comp.competitors)||[]).find(function(c){return c.homeAway==='away';})||{};
@@ -468,35 +440,29 @@ document.addEventListener('DOMContentLoaded', function () {
     var awayAbbr=(awayC.team&&awayC.team.abbreviation)||awayTeam.substring(0,3).toUpperCase();
     var homeLogo=(homeC.team&&homeC.team.logo)||'';
     var awayLogo=(awayC.team&&awayC.team.logo)||'';
-    var gameTime=formatGameTime(ev.date);
 
-    // ── Pitchers desde MLB Stats API ──────────────────────────
-    var homeData=null, awayData=null;
+    // ── Pitchers + récords desde MLB Stats API ────────────────
+    var homeData=null,awayData=null;
     if(isMLB){
-      // Buscar por nombre exacto primero, luego por apellido
-      Object.keys(mlbSchedule).forEach(function(k){
-        if(matchTeamName(k,homeTeam)) homeData=mlbSchedule[k];
-        if(matchTeamName(k,awayTeam)) awayData=mlbSchedule[k];
+      Object.keys(mlbSched).forEach(function(k){
+        if(matchTeamName(k,homeTeam)) homeData=mlbSched[k];
+        if(matchTeamName(k,awayTeam)) awayData=mlbSched[k];
       });
     }
-    var homePitcher = homeData&&homeData.pitcher ? homeData.pitcher : {name:'TBD',era:'—',wins:0,losses:0,ks:0,starts:0};
-    var awayPitcher = awayData&&awayData.pitcher ? awayData.pitcher : {name:'TBD',era:'—',wins:0,losses:0,ks:0,starts:0};
-
-    // K/salida
-    var homeKpg = homePitcher.starts>0 ? (homePitcher.ks/homePitcher.starts).toFixed(1) : '—';
-    var awayKpg = awayPitcher.starts>0 ? (awayPitcher.ks/awayPitcher.starts).toFixed(1) : '—';
-
-    // ── Récords de equipo ─────────────────────────────────────
-    var homeW=homeData?homeData.wins:0, homeL=homeData?homeData.losses:0;
-    var awayW=awayData?awayData.wins:0, awayL=awayData?awayData.losses:0;
-    var homeGP=Math.max(homeW+homeL,1), awayGP=Math.max(awayW+awayL,1);
-    var homeWP=homeGP>1?homeW/homeGP:0.5, awayWP=awayGP>1?awayW/awayGP:0.5;
+    var hp=homeData&&homeData.pitcher?homeData.pitcher:{name:'TBD',era:'—',wins:0,losses:0,ks:0,starts:0};
+    var ap=awayData&&awayData.pitcher?awayData.pitcher:{name:'TBD',era:'—',wins:0,losses:0,ks:0,starts:0};
+    var homeKpg=hp.starts>0?(hp.ks/hp.starts).toFixed(1):'—';
+    var awayKpg=ap.starts>0?(ap.ks/ap.starts).toFixed(1):'—';
+    var homeW=homeData?homeData.wins:0,homeL=homeData?homeData.losses:0;
+    var awayW=awayData?awayData.wins:0,awayL=awayData?awayData.losses:0;
+    var homeGP=Math.max(homeW+homeL,1),awayGP=Math.max(awayW+awayL,1);
+    var homeWP=homeGP>3?homeW/homeGP:0.5,awayWP=awayGP>3?awayW/awayGP:0.5;
 
     // ── Top bateadores ────────────────────────────────────────
-    var homeTeamId=homeData&&homeData.teamId ? homeData.teamId : MLB_TEAM_IDS[homeTeam];
-    var awayTeamId=awayData&&awayData.teamId ? awayData.teamId : MLB_TEAM_IDS[awayTeam];
-    var homeHitters=getTopHitters(mlbHitters,homeTeamId,homeGP);
-    var awayHitters=getTopHitters(mlbHitters,awayTeamId,awayGP);
+    var homeId=(homeData&&homeData.teamId)||MLB_TEAM_IDS[homeTeam];
+    var awayId=(awayData&&awayData.teamId)||MLB_TEAM_IDS[awayTeam];
+    var homeHit=getTopHitters(mlbHit,homeId,homeGP);
+    var awayHit=getTopHitters(mlbHit,awayId,awayGP);
 
     // ── Estadio + viento ──────────────────────────────────────
     var stadium=TEAM_STADIUM[homeTeam]||null;
@@ -504,105 +470,100 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // ── Odds ──────────────────────────────────────────────────
     var mktHome=0.5,mktAway=0.5,bestOddH=1,bestOddA=1,bkCount=0,oddsEv=null;
-    oddsEv=oddsData.find(function(o){
-      return matchTeamName(o.home_team,homeTeam)&&matchTeamName(o.away_team,awayTeam);
-    })||oddsData.find(function(o){
-      return matchTeamName(o.home_team,awayTeam)&&matchTeamName(o.away_team,homeTeam);
-    });
-    var oddsFlipped=false;
+    oddsEv=oddsData.find(function(o){return matchTeamName(o.home_team,homeTeam)&&matchTeamName(o.away_team,awayTeam);})||
+           oddsData.find(function(o){return matchTeamName(o.home_team,awayTeam)&&matchTeamName(o.away_team,homeTeam);});
+    var flipped=false;
     if(oddsEv){
-      oddsFlipped=matchTeamName(oddsEv.home_team,awayTeam);
-      var pA=getAvgProb([oddsEv],oddsEv.home_team), pB=getAvgProb([oddsEv],oddsEv.away_team);
+      flipped=matchTeamName(oddsEv.home_team,awayTeam)&&!matchTeamName(oddsEv.home_team,homeTeam);
+      var pA=getAvgProb([oddsEv],oddsEv.home_team),pB=getAvgProb([oddsEv],oddsEv.away_team);
       if(pA&&pB){
-        var tot=pA+pB, rH=pA/tot, rA=pB/tot;
-        mktHome=oddsFlipped?rA:rH; mktAway=oddsFlipped?rH:rA;
+        var tot=pA+pB,rH=pA/tot,rA=pB/tot;
+        mktHome=flipped?rA:rH; mktAway=flipped?rH:rA;
         if(mktHome<0.05||mktAway<0.05){mktHome=0.5;mktAway=0.5;oddsEv=null;}
       }
       if(oddsEv){
-        bestOddH=getBestOdd(oddsEv,oddsFlipped?oddsEv.away_team:oddsEv.home_team);
-        bestOddA=getBestOdd(oddsEv,oddsFlipped?oddsEv.home_team:oddsEv.away_team);
+        bestOddH=getBestOdd(oddsEv,homeTeam); bestOddA=getBestOdd(oddsEv,awayTeam);
         var bks=new Set(); oddsEv.bookmakers.forEach(function(b){bks.add(b.key);}); bkCount=bks.size;
       }
     }
 
-    // ── Modelo mejorado con 4 señales ─────────────────────────
-    //  1. Odds mercado (base)
-    //  2. Pitcher ERA vs promedio liga
-    //  3. Win % del equipo
-    //  4. Park factor
-    var pfAdj=(stadium?(stadium.pf-1)*0.04:0);
-
-    var homeERA=homePitcher.era!=='—'?parseFloat(homePitcher.era):LEAGUE_AVG_ERA;
-    var awayERA=awayPitcher.era!=='—'?parseFloat(awayPitcher.era):LEAGUE_AVG_ERA;
-    // ERA bajo = mejor pitcher = ventaja para su equipo
-    var homePitcherAdj=(LEAGUE_AVG_ERA-homeERA)*0.018;
-    var awayPitcherAdj=(LEAGUE_AVG_ERA-awayERA)*0.018;
-
-    // Win % solo si hay suficientes partidos (>5)
-    var recAdj=0;
-    if(homeGP>5&&awayGP>5) recAdj=(homeWP-awayWP)*0.12;
-
-    var modelHome=clamp(mktHome+homePitcherAdj-awayPitcherAdj+recAdj+pfAdj,0.05,0.95);
+    // ── Modelo con 4 señales ──────────────────────────────────
+    var pfAdj=stadium?(stadium.pf-1)*0.04:0;
+    var homeERA=hp.era!=='—'?parseFloat(hp.era):LEAGUE_AVG_ERA;
+    var awayERA=ap.era!=='—'?parseFloat(ap.era):LEAGUE_AVG_ERA;
+    var hPitchAdj=(LEAGUE_AVG_ERA-homeERA)*0.018;
+    var aPitchAdj=(LEAGUE_AVG_ERA-awayERA)*0.018;
+    var recAdj=(homeGP>5&&awayGP>5)?(homeWP-awayWP)*0.12:0;
+    var modelHome=clamp(mktHome+hPitchAdj-aPitchAdj+recAdj+pfAdj,0.05,0.95);
     var modelAway=1-modelHome;
-    var edgeH=modelHome-mktHome, edgeA=modelAway-mktAway;
+    var edgeH=modelHome-mktHome,edgeA=modelAway-mktAway;
     var betH=Math.abs(edgeH)>=Math.abs(edgeA);
     var betTeam=betH?homeTeam:awayTeam;
     var betEdge=betH?edgeH:edgeA;
     var betModel=betH?modelHome:modelAway;
-    var betMkt=betH?mktHome:mktAway;
     var betOdd=betH?bestOddH:bestOddA;
     var evVal=oddsEv?(betModel*(betOdd-1))-(1-betModel):null;
 
-    // ── Semáforo ──────────────────────────────────────────────
-    var pitchConfirmed=homePitcher.name!=='TBD'||awayPitcher.name!=='TBD';
+    // ── Favorito del mercado ──────────────────────────────────
+    var mktFav=mktHome>=mktAway?homeTeam:awayTeam;
+    var mktFavPct=Math.round(Math.max(mktHome,mktAway)*100);
+    var mktFavOdd=(mktHome>=mktAway?bestOddH:bestOddA).toFixed(2);
+
+    // ── Semáforo ── ACTUALIZADO ───────────────────────────────
+    var pitchOK=hp.name!=='TBD'||ap.name!=='TBD';
     var windBad=wind&&wind.speed>22;
     var goodOdds=oddsEv&&bkCount>=2&&betOdd>1.05&&betOdd<12;
     var recC,recL;
 
-    if(oddsEv&&betEdge>0.06&&!windBad&&goodOdds&&pitchConfirmed){
-      recC='rec-good'; recL='🟢 BUENO — Apostar: '+betTeam+' · Edge +'+Math.round(betEdge*100)+'%'+(evVal!==null?' · EV +'+(evVal*100).toFixed(1)+'¢':'');
+    if(oddsEv&&betEdge>0.06&&!windBad&&goodOdds&&pitchOK){
+      recC='rec-good';
+      recL='🟢 APOSTAR: '+betTeam+' · Edge +'+Math.round(betEdge*100)+'%'+(evVal!==null?' · EV +'+(evVal*100).toFixed(1)+'¢':'');
     }else if(oddsEv&&betEdge>0.03&&goodOdds){
-      recC='rec-tight'; recL='🟡 APRETADO — '+(pitchConfirmed?'Pitcher confirmado':'TBD')+' · Edge +'+Math.round(betEdge*100)+'%'+(windBad?' · Viento fuerte':'');
-    }else if(oddsEv&&betEdge>0){
-      recC='rec-avoid'; recL='🔴 EVITAR — Edge débil (+'+Math.round(betEdge*100)+'%) · '+(bkCount<2?'Pocas casas de apuestas':!pitchConfirmed?'Pitchers TBD':'Partido muy parejo');
+      recC='rec-tight';
+      recL='🟡 APRETADO — Favorito: '+betTeam+' ('+(betH?Math.round(mktHome*100):Math.round(mktAway*100))+'%) · Edge +'+Math.round(betEdge*100)+'%'+(windBad?' · ⚠️ Viento':'');
+    }else if(oddsEv){
+      // ── FIX: siempre muestra el favorito del mercado ──────
+      recC='rec-avoid';
+      recL='📊 Favorito de mercado: '+mktFav+' ('+mktFavPct+'% · odd '+mktFavOdd+') · Esperar más juegos para edge real';
     }else{
-      recC='rec-avoid'; recL='🔴 EVITAR — '+(!oddsEv?'Sin odds disponibles':'Sin ventaja real');
+      recC='rec-avoid';
+      recL='🔴 Sin odds disponibles para este partido';
     }
 
-    // ── Render pitcher columna ────────────────────────────────
+    // ── Pitcher columna ───────────────────────────────────────
     function pitcherCol(p,kpg,label,hitters){
-      var confirmed=p.name!=='TBD';
-      var eraVal=confirmed&&p.era!=='—'?parseFloat(p.era):null;
-      var eraC=eraVal!==null?(eraVal<3.50?'#2cb67d':eraVal<4.50?'#ffd700':'#ff6b6b'):'#aaa';
-      var kVal=kpg!=='—'?parseFloat(kpg):null;
-      var kC=kVal!==null?(kVal>=8?'#2cb67d':kVal>=6?'#ffd700':'#aaa'):'#aaa';
-      var kStar=kVal>=8?' ⭐':kVal>=6?' ✔':'';
+      var ok=p.name!=='TBD';
+      var eraV=ok&&p.era!=='—'?parseFloat(p.era):null;
+      var eraC=eraV!==null?(eraV<3.50?'#2cb67d':eraV<4.50?'#ffd700':'#ff6b6b'):'#aaa';
+      var kV=kpg!=='—'?parseFloat(kpg):null;
+      var kC=kV!==null?(kV>=8?'#2cb67d':kV>=6?'#ffd700':'#aaa'):'#aaa';
+      var kStar=kV&&kV>=8?' ⭐':kV&&kV>=6?' ✔':'';
       return '<div class="mlb-team-col">'+
         '<div class="mlb-team-col-name">'+label+'</div>'+
         '<div class="mlb-row-section">⚾ Pitcher abridor</div>'+
-        '<div class="mlb-row"><span>Nombre</span><span style="color:'+(confirmed?'#e0e0f0':'#666')+'">'+p.name+'</span></div>'+
-        (confirmed?
-          '<div class="mlb-row"><span>Récord</span><span>'+p.wins+'-'+p.losses+'</span></div>'+
-          '<div class="mlb-row"><span>ERA</span><span style="color:'+eraC+'">'+(p.era||'—')+'</span></div>'+
-          '<div class="mlb-row"><span>K/salida</span><span style="color:'+kC+'">'+kpg+kStar+'</span></div>'
-        :'')+
+        '<div class="mlb-row"><span>Nombre</span><span style="color:'+(ok?'#e0e0f0':'#555')+'">'+p.name+'</span></div>'+
+        (ok?'<div class="mlb-row"><span>Récord</span><span>'+p.wins+'-'+p.losses+'</span></div>'+
+            '<div class="mlb-row"><span>ERA</span><span style="color:'+eraC+'">'+(p.era||'—')+'</span></div>'+
+            '<div class="mlb-row"><span>K/salida</span><span style="color:'+kC+'">'+kpg+kStar+'</span></div>':'')+
         '<div class="mlb-row-section">🏏 Top bateadores (H/G)</div>'+
-        (hitters&&hitters.length?hitters.map(function(h){
-          var hC=h.hpg>=1.2?'#2cb67d':h.hpg>=0.8?'#ffd700':'#aaa';
-          return '<div class="mlb-row"><span>'+h.name.split(' ').pop()+'</span><span style="color:'+hC+'">'+h.hpg.toFixed(2)+' H/G</span></div>';
-        }).join(''):'<div style="color:#444;font-size:0.75rem;padding:3px 0">Sin datos suficientes</div>')+
+        (hitters&&hitters.length?
+          hitters.map(function(h){
+            var hC=h.hpg>=1.2?'#2cb67d':h.hpg>=0.8?'#ffd700':'#aaa';
+            return '<div class="mlb-row"><span>'+h.name.split(' ').pop()+'</span><span style="color:'+hC+'">'+h.hpg.toFixed(2)+' H/G</span></div>';
+          }).join('')
+        :'<div style="color:#444;font-size:0.74rem;padding:3px 0">📅 Datos disponibles pronto</div>')+
       '</div>';
     }
 
     // ── Odds grid ─────────────────────────────────────────────
     var oddsHTML=oddsEv?
       '<div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:8px;margin-top:8px">'+
-        '<div class="mlb-odd-box"><div class="mlb-odd-label">'+homeAbbr+' Mercado</div><div class="mlb-odd-value" style="color:#e0e0f0">'+Math.round(mktHome*100)+'%</div></div>'+
-        '<div class="mlb-odd-box"><div class="mlb-odd-label">'+awayAbbr+' Mercado</div><div class="mlb-odd-value" style="color:#e0e0f0">'+Math.round(mktAway*100)+'%</div></div>'+
-        '<div class="mlb-odd-box"><div class="mlb-odd-label">'+homeAbbr+' Modelo</div><div class="mlb-odd-value" style="color:'+(edgeH>0.03?'#2cb67d':'#aaa')+'">'+Math.round(modelHome*100)+'%</div></div>'+
-        '<div class="mlb-odd-box"><div class="mlb-odd-label">Mejor odd</div><div class="mlb-odd-value" style="color:#ffd700">'+(betH?bestOddH:bestOddA).toFixed(2)+'</div></div>'+
+        '<div class="mlb-odd-box"><div class="mlb-odd-label">'+homeAbbr+' Mercado</div><div class="mlb-odd-value">'+Math.round(mktHome*100)+'%</div></div>'+
+        '<div class="mlb-odd-box"><div class="mlb-odd-label">'+awayAbbr+' Mercado</div><div class="mlb-odd-value">'+Math.round(mktAway*100)+'%</div></div>'+
+        '<div class="mlb-odd-box"><div class="mlb-odd-label">'+homeAbbr+' Modelo</div><div class="mlb-odd-value" style="color:'+(edgeH>0.03?'#2cb67d':edgeH<-0.03?'#ff6b6b':'#aaa')+'">'+Math.round(modelHome*100)+'%</div></div>'+
+        '<div class="mlb-odd-box"><div class="mlb-odd-label">Mejor odd '+mktFav.split(' ').pop()+'</div><div class="mlb-odd-value" style="color:#ffd700">'+mktFavOdd+'</div></div>'+
       '</div>'
-    :'<div style="color:#555;font-size:0.78rem;margin-top:6px;padding:8px;background:#1a1a2e;border-radius:8px">Sin odds disponibles para este partido</div>';
+    :'<div style="color:#555;font-size:0.78rem;margin-top:6px;padding:8px;background:#1a1a2e;border-radius:8px">Sin odds disponibles</div>';
 
     // ── Estadio + viento ──────────────────────────────────────
     var extrasHTML='<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px">';
@@ -618,30 +579,24 @@ document.addEventListener('DOMContentLoaded', function () {
     }
     extrasHTML+='</div>';
 
-    // ── Récords ───────────────────────────────────────────────
-    var recStr='';
-    if(homeGP>0||awayGP>0){
-      recStr='<div style="display:flex;gap:8px;font-size:0.75rem;color:#888;margin-top:2px">'+
-        '<span>'+homeAbbr+': <b style="color:#e0e0f0">'+homeW+'-'+homeL+'</b></span>'+
-        '<span style="color:#555">|</span>'+
-        '<span>'+awayAbbr+': <b style="color:#e0e0f0">'+awayW+'-'+awayL+'</b></span>'+
-      '</div>';
-    }
-
     var div=document.createElement('div');
     div.style.cssText='background:#0f0f1a;border:1px solid #2a2a4a;border-radius:14px;padding:18px;display:flex;flex-direction:column;gap:12px';
     div.innerHTML=
-      '<div style="font-size:0.72rem;color:#7f5af0">⏰ '+gameTime+'</div>'+
+      '<div style="font-size:0.72rem;color:#7f5af0">⏰ '+formatGameTime(ev.date)+'</div>'+
       '<div style="font-size:1rem;font-weight:700;display:flex;align-items:center;gap:8px;flex-wrap:wrap">'+
         (homeLogo?'<img src="'+homeLogo+'" style="width:22px;height:22px;object-fit:contain" onerror="this.style.display=\'none\'">':'')+
         homeTeam+'<span style="color:#555">vs</span>'+
         (awayLogo?'<img src="'+awayLogo+'" style="width:22px;height:22px;object-fit:contain" onerror="this.style.display=\'none\'">':'')+
         awayTeam+
       '</div>'+
-      recStr+
+      '<div style="display:flex;gap:12px;font-size:0.75rem;color:#888">'+
+        '<span>'+homeAbbr+': <b style="color:#e0e0f0">'+homeW+'-'+homeL+'</b></span>'+
+        '<span style="color:#333">|</span>'+
+        '<span>'+awayAbbr+': <b style="color:#e0e0f0">'+awayW+'-'+awayL+'</b></span>'+
+      '</div>'+
       '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">'+
-        pitcherCol(homePitcher,homeKpg,'🏠 Local',homeHitters)+
-        pitcherCol(awayPitcher,awayKpg,'✈️ Visita',awayHitters)+
+        pitcherCol(hp,homeKpg,'🏠 Local',homeHit)+
+        pitcherCol(ap,awayKpg,'✈️ Visita',awayHit)+
       '</div>'+
       extrasHTML+
       oddsHTML+
@@ -650,70 +605,66 @@ document.addEventListener('DOMContentLoaded', function () {
   }
 
   // ── SPORT SELECTOR ────────────────────────────────────────────
-  sportSelect.addEventListener('change', function(){
-    var sport=this.value;
+  sportSelect.addEventListener('change',function(){
     hideError();
     resultDiv.style.display='none'; combinedDiv.style.display='none';
     espnPanel.style.display='none'; scannerPanel.style.display='none';
     scannerPanel.innerHTML=''; evFilterRow.style.display='none';
     mlbPanel.style.display='none'; mlbPanel.innerHTML='';
+    v1Panel.style.display='none';
     eventsCache=[]; espnTeamsMap={}; espnDataCache={};
     scanResults=[]; windCache={}; mlbScheduleCache=null; mlbHittersCache=null;
     leagueSelect.innerHTML='<option value="">— Elige una liga —</option>';
-    leagueSelect.disabled=!sport;
+    leagueSelect.disabled=!this.value;
     teamA.innerHTML='<option value="">— Primero elige liga —</option>'; teamA.disabled=true;
     teamB.innerHTML='<option value="">— Primero elige liga —</option>'; teamB.disabled=true;
     predictBtn.disabled=true; scanBtn.disabled=true;
-    v1Panel.style.display='none';
-    if(!sport) return;
-    (LEAGUES[sport]||[]).forEach(function(l){
-      var opt=document.createElement('option'); opt.value=l.key; opt.textContent=l.title;
-      leagueSelect.appendChild(opt);
+    if(!this.value) return;
+    (LEAGUES[this.value]||[]).forEach(function(l){
+      var o=document.createElement('option'); o.value=l.key; o.textContent=l.title;
+      leagueSelect.appendChild(o);
     });
   });
 
   // ── LEAGUE SELECTOR ───────────────────────────────────────────
-  leagueSelect.addEventListener('change', async function(){
-    var leagueKey=this.value;
+  leagueSelect.addEventListener('change',async function(){
+    var lk=this.value;
     hideError();
     resultDiv.style.display='none'; combinedDiv.style.display='none';
     espnPanel.style.display='none'; scannerPanel.style.display='none';
     scannerPanel.innerHTML=''; evFilterRow.style.display='none';
     mlbPanel.style.display='none'; mlbPanel.innerHTML='';
-    espnDataCache={}; scanResults={}; mlbScheduleCache=null; mlbHittersCache=null;
+    v1Panel.style.display='none';
+    espnDataCache={}; scanResults=[]; mlbScheduleCache=null; mlbHittersCache=null;
     scanBtn.disabled=true;
-    if(!leagueKey){
-      v1Panel.style.display='none';
+    if(!lk){
       teamA.innerHTML='<option value="">— Elige liga primero —</option>'; teamA.disabled=true;
       teamB.innerHTML='<option value="">— Elige liga primero —</option>'; teamB.disabled=true;
       predictBtn.disabled=true; return;
     }
     var sport=sportSelect.value;
-    var leagueCfg=(LEAGUES[sport]||[]).find(function(l){return l.key===leagueKey;});
-    var isPanel=leagueCfg&&leagueCfg.panel;
-
-    if(isPanel){
-      v1Panel.style.display='none';
+    var cfg=(LEAGUES[sport]||[]).find(function(l){return l.key===lk;});
+    if(cfg&&cfg.panel){
       mlbPanel.style.display='flex';
-      await loadMLBGamesPanel(leagueKey);
+      await loadMLBGamesPanel(lk);
     }else{
       v1Panel.style.display='flex';
-      var staticTeams=(leagueCfg&&leagueCfg.staticTeams)||[];
+      var st=(cfg&&cfg.staticTeams)||[];
       teamA.innerHTML='<option value="">— Cargando... —</option>'; teamA.disabled=true;
       teamB.innerHTML='<option value="">— Cargando... —</option>'; teamB.disabled=true;
       predictBtn.disabled=true; setLoading(true);
       try{
         var rs=await Promise.all([
-          fetch(BASE+'/sports/'+leagueKey+'/odds/?apiKey='+API_KEY+'&regions=eu&markets=h2h&oddsFormat=decimal'),
-          loadESPNTeams(leagueKey)
+          fetch(BASE+'/sports/'+lk+'/odds/?apiKey='+API_KEY+'&regions=eu&markets=h2h&oddsFormat=decimal'),
+          loadESPNTeams(lk)
         ]);
-        var oddsRes=rs[0];
-        var rem=oddsRes.headers.get('x-requests-remaining'), used=oddsRes.headers.get('x-requests-used');
+        var or=rs[0];
+        var rem=or.headers.get('x-requests-remaining'),used=or.headers.get('x-requests-used');
         if(rem!==null) quotaInfo.textContent='Créditos usados: '+used+' | Restantes: '+rem;
         var data=[];
-        if(oddsRes.ok){data=await oddsRes.json();if(!Array.isArray(data))data=[];}
-        if(staticTeams.length===0&&data.length===0){showError('No hay partidos disponibles.');setLoading(false);return;}
-        eventsCache=data; populateTeams(data,staticTeams);
+        if(or.ok){data=await or.json();if(!Array.isArray(data))data=[];}
+        if(!st.length&&!data.length){showError('No hay partidos disponibles.');setLoading(false);return;}
+        eventsCache=data; populateTeams(data,st);
         if(eventsCache.length>0) scanBtn.disabled=false;
       }catch(e){showError('Error: '+e.message);}
       setLoading(false);
@@ -728,16 +679,16 @@ document.addEventListener('DOMContentLoaded', function () {
   teamA.addEventListener('change',checkTeams);
   teamB.addEventListener('change',checkTeams);
 
-  predictBtn.addEventListener('click', async function(){
+  predictBtn.addEventListener('click',async function(){
     hideError(); resultDiv.style.display='none'; combinedDiv.style.display='none'; espnPanel.style.display='none';
     var tA=teamA.value,tB=teamB.value;
     if(!tA||!tB||tA===tB){showError('Selecciona dos equipos distintos.');return;}
     var rel=eventsCache.filter(function(e){return(e.home_team===tA&&e.away_team===tB)||(e.home_team===tB&&e.away_team===tA);});
     if(!rel.length) rel=eventsCache.filter(function(e){return e.home_team===tA||e.away_team===tA||e.home_team===tB||e.away_team===tB;});
     var probA=0.5,probB=0.5;
-    if(rel.length>0){
+    if(rel.length){
       var pAr=getAvgProb(rel,tA),pBr=getAvgProb(rel,tB);
-      if(pAr!==null&&pBr!==null){
+      if(pAr&&pBr){
         var tot=pAr+pBr; probA=pAr/tot; probB=pBr/tot;
         var bks=new Set(); rel.forEach(function(e){e.bookmakers.forEach(function(b){bks.add(b.key);});});
         document.getElementById('winnerName').textContent='🏆 '+(probA>=probB?tA:tB);
@@ -750,15 +701,15 @@ document.addEventListener('DOMContentLoaded', function () {
         resultDiv.style.display='block';
       }
     }else{showError('No hay odds para estos equipos.');}
-    var leagueKey=leagueSelect.value;
+    var lk=leagueSelect.value;
     espnPanel.style.display='flex';
     espnGrid.innerHTML='<div style="color:#555;font-size:0.85rem">⏳ Cargando ESPN...</div>';
-    var espnR=await Promise.all([fetchESPNTeamData(leagueKey,tA),fetchESPNTeamData(leagueKey,tB)]);
-    espnGrid.innerHTML=renderTeamCard(espnR[0],tA)+renderTeamCard(espnR[1],tB);
-    if(resultDiv.style.display==='block') renderCombinedScore(tA,tB,probA,probB,espnR[0],espnR[1]);
+    var er=await Promise.all([fetchESPNTeamData(lk,tA),fetchESPNTeamData(lk,tB)]);
+    espnGrid.innerHTML=renderTeamCard(er[0],tA)+renderTeamCard(er[1],tB);
+    if(resultDiv.style.display==='block') renderCombinedScore(tA,tB,probA,probB,er[0],er[1]);
   });
 
-  // ── SCANNER (fútbol / basketball) ─────────────────────────────
+  // ── SCANNER ───────────────────────────────────────────────────
   function renderScannerResults(){
     var filtered=scanResults.filter(function(r){return r.ev>=evMinActive;});
     scannerPanel.querySelectorAll('.scanner-card').forEach(function(c){c.remove();});
@@ -785,31 +736,31 @@ document.addEventListener('DOMContentLoaded', function () {
     });
   }
 
-  scanBtn.addEventListener('click', async function(){
+  scanBtn.addEventListener('click',async function(){
     if(!eventsCache.length) return;
     scanBtn.disabled=true; scanBtn.textContent='⏳ Escaneando...';
     scannerPanel.style.display='flex'; scannerPanel.innerHTML='<div style="color:#555;font-size:0.85rem;text-align:center;padding:8px">Analizando partidos de hoy...</div>';
     scanResults=[];
-    var leagueKey=leagueSelect.value, sport=sportSelect.value;
+    var lk=leagueSelect.value,sport=sportSelect.value;
     for(var i=0;i<eventsCache.length;i++){
       var ev=eventsCache[i]; if(!isToday(ev.commence_time)) continue;
-      var tA=ev.home_team, tB=ev.away_team;
-      var pAr=getAvgProb([ev],tA), pBr=getAvgProb([ev],tB);
+      var tA=ev.home_team,tB=ev.away_team;
+      var pAr=getAvgProb([ev],tA),pBr=getAvgProb([ev],tB);
       if(!pAr||!pBr) continue;
-      var tot=pAr+pBr, mA=pAr/tot, mB=pBr/tot;
+      var tot=pAr+pBr,mA=pAr/tot,mB=pBr/tot;
       if(mA<0.05||mB<0.05) continue;
-      var dataA=await fetchESPNTeamData(leagueKey,tA), dataB=await fetchESPNTeamData(leagueKey,tB);
-      var fsA=dataA&&dataA.formScore!==null?dataA.formScore:0.5;
-      var fsB=dataB&&dataB.formScore!==null?dataB.formScore:0.5;
-      var cA=(mA*0.6)+(fsA*0.4), cB=(mB*0.6)+(fsB*0.4), totC=cA+cB;
-      var modA=cA/totC, modB=cB/totC;
-      var edgeA=modA-mA, edgeB=modB-mB;
-      if(Math.max(Math.abs(edgeA),Math.abs(edgeB))<0.05) continue;
-      var betH=edgeA>=edgeB;
-      var betTeam=betH?tA:tB, betEdge=betH?edgeA:edgeB, betModel=betH?modA:modB, betMkt=betH?mA:mB;
-      var bestOdd=getBestOdd(ev,betTeam);
-      var evVal=(betModel*(bestOdd-1))-(1-betModel);
-      scanResults.push({home:tA,away:tB,betTeam:betTeam,edge:betEdge,ev:evVal,modelPct:Math.round(betModel*100),mktPct:Math.round(betMkt*100),odd:bestOdd.toFixed(2),time:formatGameTime(ev.commence_time),sport:sport});
+      var dA=await fetchESPNTeamData(lk,tA),dB=await fetchESPNTeamData(lk,tB);
+      var fsA=dA&&dA.formScore!==null?dA.formScore:0.5;
+      var fsB=dB&&dB.formScore!==null?dB.formScore:0.5;
+      var cA=(mA*0.6)+(fsA*0.4),cB=(mB*0.6)+(fsB*0.4),totC=cA+cB;
+      var modA=cA/totC,modB=cB/totC;
+      var eA=modA-mA,eB=modB-mB;
+      if(Math.max(Math.abs(eA),Math.abs(eB))<0.05) continue;
+      var bH=eA>=eB;
+      var bTeam=bH?tA:tB,bEdge=bH?eA:eB,bModel=bH?modA:modB,bMkt=bH?mA:mB;
+      var bOdd=getBestOdd(ev,bTeam);
+      var evV=(bModel*(bOdd-1))-(1-bModel);
+      scanResults.push({home:tA,away:tB,betTeam:bTeam,edge:bEdge,ev:evV,modelPct:Math.round(bModel*100),mktPct:Math.round(bMkt*100),odd:bOdd.toFixed(2),time:formatGameTime(ev.commence_time),sport:sport});
     }
     scanResults.sort(function(a,b){return b.ev-a.ev;});
     scannerPanel.innerHTML=''; evFilterRow.style.display='flex';
