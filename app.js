@@ -164,23 +164,29 @@ document.addEventListener('DOMContentLoaded', function () {
   function oddsToProb(d){ return 1/d; }
   function clamp(v,mn,mx){ return Math.max(mn,Math.min(mx,v)); }
 
+  // ── FIX: Siempre forzar UTC para evitar desfase horario ───────
+  function parseDate(u){
+    if(!u) return null;
+    var s=(u.endsWith('Z')||u.includes('+'))?u:u+'Z';
+    return new Date(s);
+  }
   function todayStr(){
     return new Date().toLocaleDateString('en-CA',{timeZone:'America/Panama'});
   }
   function formatGameTime(u){
-    if(!u) return '—';
-    return new Date(u).toLocaleTimeString('es-PA',{hour:'2-digit',minute:'2-digit',timeZone:'America/Panama'})+' (PTY)';
+    var d=parseDate(u); if(!d) return '—';
+    return d.toLocaleTimeString('es-PA',{hour:'2-digit',minute:'2-digit',timeZone:'America/Panama'})+' (PTY)';
   }
   function isToday(u){
-    if(!u) return false;
+    var d=parseDate(u); if(!d) return false;
     var o={timeZone:'America/Panama'};
-    return new Date(u).toLocaleDateString('es-PA',o)===new Date().toLocaleDateString('es-PA',o);
+    return d.toLocaleDateString('es-PA',o)===new Date().toLocaleDateString('es-PA',o);
   }
-  function getWindDir(d){
-    return ['Norte','Noreste','Este','Sureste','Sur','Suroeste','Oeste','Noroeste'][Math.round(d/45)%8];
+  function getWindDir(deg){
+    return ['Norte','Noreste','Este','Sureste','Sur','Suroeste','Oeste','Noroeste'][Math.round(deg/45)%8];
   }
   function matchTeamName(a,b){
-    var al=a.toLowerCase(), bl=b.toLowerCase();
+    var al=a.toLowerCase(),bl=b.toLowerCase();
     if(al===bl) return true;
     return al.includes(bl.split(' ').pop())||bl.includes(al.split(' ').pop());
   }
@@ -255,9 +261,7 @@ document.addEventListener('DOMContentLoaded', function () {
               var p=t.probablePitcher;
               var ps={era:'—',wins:0,losses:0,ks:0,starts:0};
               (p.stats||[]).forEach(function(s){
-                var isPitch=s.group&&s.group.displayName==='pitching';
-                var isSeason=s.type&&s.type.displayName==='statsSingleSeason';
-                if(isPitch&&isSeason){
+                if(s.group&&s.group.displayName==='pitching'&&s.type&&s.type.displayName==='statsSingleSeason'){
                   var st=s.stats||{};
                   ps.era=st.era||'—'; ps.wins=st.wins||0; ps.losses=st.losses||0;
                   ps.ks=st.strikeOuts||0; ps.starts=st.gamesStarted||0;
@@ -291,10 +295,9 @@ document.addEventListener('DOMContentLoaded', function () {
     }catch(e){return {};}
   }
 
-  // ── FIX: mínimo 5 juegos para H/G realista ────────────────────
   function getTopHitters(hittersByTeam,teamId,teamGames){
     if(!hittersByTeam||!teamId) return [];
-    var gp=Math.max(teamGames||1, 5); // mínimo 5 para evitar 7.00 H/G
+    var gp=Math.max(teamGames||1,5);
     return (hittersByTeam[teamId]||[]).slice(0,3).map(function(h){
       return {name:h.name,hits:h.hits,hpg:h.hits/gp};
     });
@@ -349,7 +352,7 @@ document.addEventListener('DOMContentLoaded', function () {
         form=played.slice(-5).map(function(e){
           var comp=e.competitions[0];
           var mine=comp.competitors.find(function(c){return c.team&&c.team.id===info.id;});
-          var opp=comp.competitors.find(function(c){return c.team&&c.team.id!==info.id;});
+          var opp =comp.competitors.find(function(c){return c.team&&c.team.id!==info.id;});
           var ms=Number(mine&&mine.score)||0,os=Number(opp&&opp.score)||0;
           return {result:ms>os?'W':ms<os?'L':'D',score:ms+'-'+os,opponent:(opp&&opp.team&&opp.team.shortDisplayName)||'?',date:e.date?e.date.substring(0,10):''};
         });
@@ -396,11 +399,16 @@ document.addEventListener('DOMContentLoaded', function () {
     mlbPanel.innerHTML='<div style="text-align:center;color:#555;padding:24px;font-size:0.85rem">⏳ Cargando partidos, pitchers y estadísticas...</div>';
     var espnMap=ESPN_LEAGUE_MAP[leagueKey]||{sport:'baseball',league:'mlb'};
     var isMLB=leagueKey==='baseball_mlb'||leagueKey==='baseball_mlb_preseason';
+
+    // ── FIX: limit=100 + fecha para traer todos los partidos ──
+    var dateParam=todayStr().replace(/-/g,'');
+    var scoreboardUrl=ESPN+'/'+espnMap.sport+'/'+espnMap.league+'/scoreboard?limit=100&dates='+dateParam;
+
     try{
       var fetchOdds=leagueKey!=='baseball_ncaa'
         ?fetch(BASE+'/sports/'+leagueKey+'/odds/?apiKey='+API_KEY+'&regions=eu&markets=h2h&oddsFormat=decimal')
         :Promise.resolve(null);
-      var promises=[fetch(ESPN+'/'+espnMap.sport+'/'+espnMap.league+'/scoreboard'),fetchOdds];
+      var promises=[fetch(scoreboardUrl),fetchOdds];
       if(isMLB){ promises.push(fetchMLBSchedule()); promises.push(fetchMLBHittingLeaders()); }
       var rs=await Promise.all(promises);
       var scoreData=rs[0].ok?await rs[0].json():null;
@@ -441,7 +449,7 @@ document.addEventListener('DOMContentLoaded', function () {
     var homeLogo=(homeC.team&&homeC.team.logo)||'';
     var awayLogo=(awayC.team&&awayC.team.logo)||'';
 
-    // ── Pitchers + récords desde MLB Stats API ────────────────
+    // ── Pitchers + récords ────────────────────────────────────
     var homeData=null,awayData=null;
     if(isMLB){
       Object.keys(mlbSched).forEach(function(k){
@@ -487,7 +495,7 @@ document.addEventListener('DOMContentLoaded', function () {
       }
     }
 
-    // ── Modelo con 4 señales ──────────────────────────────────
+    // ── Modelo 4 señales ──────────────────────────────────────
     var pfAdj=stadium?(stadium.pf-1)*0.04:0;
     var homeERA=hp.era!=='—'?parseFloat(hp.era):LEAGUE_AVG_ERA;
     var awayERA=ap.era!=='—'?parseFloat(ap.era):LEAGUE_AVG_ERA;
@@ -504,27 +512,38 @@ document.addEventListener('DOMContentLoaded', function () {
     var betOdd=betH?bestOddH:bestOddA;
     var evVal=oddsEv?(betModel*(betOdd-1))-(1-betModel):null;
 
-    // ── Favorito del mercado ──────────────────────────────────
+    // ── Favorito de mercado ───────────────────────────────────
     var mktFav=mktHome>=mktAway?homeTeam:awayTeam;
     var mktFavPct=Math.round(Math.max(mktHome,mktAway)*100);
     var mktFavOdd=(mktHome>=mktAway?bestOddH:bestOddA).toFixed(2);
+    var underdog=mktHome>=mktAway?awayTeam:homeTeam;
+    var underdogOdd=(mktHome>=mktAway?bestOddA:bestOddH).toFixed(2);
 
-    // ── Semáforo ── ACTUALIZADO ───────────────────────────────
+    // ── Semáforo actualizado ──────────────────────────────────
     var pitchOK=hp.name!=='TBD'||ap.name!=='TBD';
     var windBad=wind&&wind.speed>22;
     var goodOdds=oddsEv&&bkCount>=2&&betOdd>1.05&&betOdd<12;
     var recC,recL;
 
     if(oddsEv&&betEdge>0.06&&!windBad&&goodOdds&&pitchOK){
+      // Edge real encontrado
       recC='rec-good';
       recL='🟢 APOSTAR: '+betTeam+' · Edge +'+Math.round(betEdge*100)+'%'+(evVal!==null?' · EV +'+(evVal*100).toFixed(1)+'¢':'');
     }else if(oddsEv&&betEdge>0.03&&goodOdds){
       recC='rec-tight';
-      recL='🟡 APRETADO — Favorito: '+betTeam+' ('+(betH?Math.round(mktHome*100):Math.round(mktAway*100))+'%) · Edge +'+Math.round(betEdge*100)+'%'+(windBad?' · ⚠️ Viento':'');
+      recL='🟡 APRETADO — Pick: '+betTeam+' ('+Math.round(betModel*100)+'%) · Edge +'+Math.round(betEdge*100)+'%'+(windBad?' · ⚠️ Viento':'');
     }else if(oddsEv){
-      // ── FIX: siempre muestra el favorito del mercado ──────
-      recC='rec-avoid';
-      recL='📊 Favorito de mercado: '+mktFav+' ('+mktFavPct+'% · odd '+mktFavOdd+') · Esperar más juegos para edge real';
+      // Sin edge pero mostrar favorito claro por color ─────────
+      if(mktFavPct>=65){
+        recC='rec-good';
+        recL='🟢 Favorito claro: '+mktFav+' ('+mktFavPct+'% · odd '+mktFavOdd+') · Underdog: '+underdog+' (odd '+underdogOdd+')';
+      }else if(mktFavPct>=55){
+        recC='rec-tight';
+        recL='🟡 Favorito leve: '+mktFav+' ('+mktFavPct+'% · odd '+mktFavOdd+') · Sin edge confirmado aún';
+      }else{
+        recC='rec-avoid';
+        recL='🔴 Partido muy parejo ('+mktFavPct+'%) · Sin ventaja clara · Evitar';
+      }
     }else{
       recC='rec-avoid';
       recL='🔴 Sin odds disponibles para este partido';
@@ -561,7 +580,7 @@ document.addEventListener('DOMContentLoaded', function () {
         '<div class="mlb-odd-box"><div class="mlb-odd-label">'+homeAbbr+' Mercado</div><div class="mlb-odd-value">'+Math.round(mktHome*100)+'%</div></div>'+
         '<div class="mlb-odd-box"><div class="mlb-odd-label">'+awayAbbr+' Mercado</div><div class="mlb-odd-value">'+Math.round(mktAway*100)+'%</div></div>'+
         '<div class="mlb-odd-box"><div class="mlb-odd-label">'+homeAbbr+' Modelo</div><div class="mlb-odd-value" style="color:'+(edgeH>0.03?'#2cb67d':edgeH<-0.03?'#ff6b6b':'#aaa')+'">'+Math.round(modelHome*100)+'%</div></div>'+
-        '<div class="mlb-odd-box"><div class="mlb-odd-label">Mejor odd '+mktFav.split(' ').pop()+'</div><div class="mlb-odd-value" style="color:#ffd700">'+mktFavOdd+'</div></div>'+
+        '<div class="mlb-odd-box"><div class="mlb-odd-label">Mejor odd</div><div class="mlb-odd-value" style="color:#ffd700">'+mktFavOdd+'</div></div>'+
       '</div>'
     :'<div style="color:#555;font-size:0.78rem;margin-top:6px;padding:8px;background:#1a1a2e;border-radius:8px">Sin odds disponibles</div>';
 
